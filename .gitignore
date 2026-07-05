@@ -1,0 +1,12 @@
+node_modules/
+dist/
+Export/
+.tools/
+.vite/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+*.log
+.vite-dev*.log
+src/assets/twilight-diagram.png

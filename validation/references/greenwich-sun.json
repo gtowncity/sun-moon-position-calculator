@@ -1,0 +1,21 @@
+{
+    "id":  "greenwich-sun",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "sun",
+    "location":  {
+                     "name":  "Greenwich, United Kingdom",
+                     "latitude":  51.4769,
+                     "longitude":  0.0005,
+                     "elevationMeters":  46
+                 },
+    "timeZone":  "Europe/London",
+    "utcTime":  "2026-04-15T12:00:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.01,
+    "toleranceAltitudeDeg":  0.01,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "Greenwich solar reference placeholder."
+}

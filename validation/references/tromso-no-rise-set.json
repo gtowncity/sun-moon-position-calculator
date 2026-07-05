@@ -1,0 +1,21 @@
+{
+    "id":  "tromso-no-rise-set",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "sun",
+    "location":  {
+                     "name":  "Tromso, Norway",
+                     "latitude":  69.6492,
+                     "longitude":  18.9553,
+                     "elevationMeters":  10
+                 },
+    "timeZone":  "Europe/Oslo",
+    "utcTime":  "2026-06-21T12:00:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.01,
+    "toleranceAltitudeDeg":  0.01,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "High-latitude no-rise/no-set scenario placeholder."
+}

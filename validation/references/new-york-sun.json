@@ -1,0 +1,21 @@
+{
+    "id":  "new-york-sun",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "sun",
+    "location":  {
+                     "name":  "New York, United States",
+                     "latitude":  40.7128,
+                     "longitude":  -74.006,
+                     "elevationMeters":  10
+                 },
+    "timeZone":  "America/New_York",
+    "utcTime":  "2026-04-15T16:00:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.01,
+    "toleranceAltitudeDeg":  0.01,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "New York solar reference placeholder."
+}

@@ -1,0 +1,21 @@
+{
+    "id":  "equator-near-sun",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "sun",
+    "location":  {
+                     "name":  "Quito, Ecuador",
+                     "latitude":  -0.1807,
+                     "longitude":  -78.4678,
+                     "elevationMeters":  2850
+                 },
+    "timeZone":  "America/Guayaquil",
+    "utcTime":  "2026-03-20T17:00:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.01,
+    "toleranceAltitudeDeg":  0.01,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "Equator-near solar reference placeholder."
+}

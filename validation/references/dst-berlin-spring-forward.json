@@ -1,0 +1,21 @@
+{
+    "id":  "dst-berlin-spring-forward",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "sun",
+    "location":  {
+                     "name":  "Berlin DST spring forward",
+                     "latitude":  52.52,
+                     "longitude":  13.405,
+                     "elevationMeters":  34
+                 },
+    "timeZone":  "Europe/Berlin",
+    "utcTime":  "2026-03-29T01:30:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.01,
+    "toleranceAltitudeDeg":  0.01,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "DST spring-forward conversion fixture; local 02:30 does not exist."
+}

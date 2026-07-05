@@ -1,0 +1,21 @@
+{
+    "id":  "sydney-sun",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "sun",
+    "location":  {
+                     "name":  "Sydney, Australia",
+                     "latitude":  -33.8688,
+                     "longitude":  151.2093,
+                     "elevationMeters":  58
+                 },
+    "timeZone":  "Australia/Sydney",
+    "utcTime":  "2026-04-15T02:00:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.01,
+    "toleranceAltitudeDeg":  0.01,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "Sydney solar reference placeholder."
+}

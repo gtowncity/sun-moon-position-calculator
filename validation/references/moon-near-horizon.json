@@ -1,0 +1,21 @@
+{
+    "id":  "moon-near-horizon",
+    "source":  "JPL Horizons",
+    "retrievalDate":  "TODO_REFERENCE_VALUE",
+    "targetBody":  "moon",
+    "location":  {
+                     "name":  "Berlin, Germany Moon near horizon",
+                     "latitude":  52.52,
+                     "longitude":  13.405,
+                     "elevationMeters":  34
+                 },
+    "timeZone":  "Europe/Berlin",
+    "utcTime":  "2026-07-03T21:00:00Z",
+    "expectedAzimuthDeg":  "TODO_REFERENCE_VALUE",
+    "expectedAltitudeDeg":  "TODO_REFERENCE_VALUE",
+    "toleranceAzimuthDeg":  0.1,
+    "toleranceAltitudeDeg":  0.1,
+    "refraction":  "standard",
+    "refractionActive":  true,
+    "notes":  "Moon near horizon placeholder; replace with actual JPL Horizons case."
+}
