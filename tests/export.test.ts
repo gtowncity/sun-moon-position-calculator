@@ -1,7 +1,6 @@
 ﻿import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
 import { getTranslator } from "../src/i18n";
-import { exportCsv } from "../src/lib/export/csv";
 import { exportMarkdown } from "../src/lib/export/markdown";
 import { exportTxt } from "../src/lib/export/txt";
 import { exportXlsx } from "../src/lib/export/xlsx";
@@ -17,16 +16,6 @@ const events = makeEvents();
 const metadata = makeMetadata();
 
 describe("exports", () => {
-  it("exports CSV with metadata, results and events", () => {
-    const csv = exportCsv(rows, events, metadata, getTranslator("en"));
-
-    expect(csv).toContain("Metadata");
-    expect(csv).toContain("Results");
-    expect(csv).toContain("Events");
-    expect(csv).toContain("App version,0.2.0");
-    expect(csv).toContain("Sun");
-  });
-
   it("exports TXT sorted by body and UTC time", () => {
     const txt = exportTxt(rows, events, metadata, getTranslator("en"));
 

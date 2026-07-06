@@ -11,7 +11,7 @@ import { RetroMultiNightPlanner } from "./dashboard/RetroMultiNightPlanner";
 import { TerminalHero } from "./dashboard/TerminalHero";
 import { TerminalNightTimeline } from "./dashboard/TerminalNightTimeline";
 import { TwilightPhaseTable } from "./dashboard/TwilightPhaseTable";
-import type { Language } from "../types";
+import type { Language, TargetBody } from "../types";
 
 export type RangePreset = "night" | "3d" | "7d" | "14d" | "30d" | "custom";
 export type AnalysisMode = "instant" | "night" | "multi" | "custom";
@@ -23,6 +23,7 @@ export interface DashboardProps {
   hoveredSample: TimeSample | null;
   rangePreset: RangePreset;
   analysisMode: AnalysisMode;
+  targetBody: TargetBody;
   imagingMode: ImagingMode;
   language: Language;
   onRangePreset: (preset: RangePreset) => void;
@@ -36,22 +37,35 @@ export interface DashboardProps {
 export { formatDuration } from "./dashboard/utils";
 
 export function AstroDashboard(props: DashboardProps) {
-  const { insight, focusedSample, hoveredSample, imagingMode, language, t } = props;
+  const { insight, focusedSample, hoveredSample, analysisMode, targetBody, imagingMode, language, t } = props;
+  const isInstantMode = analysisMode === "instant";
 
   return (
     <section className="astro-terminal-workbench" aria-label={t("astroDashboard")}>
       <div className="main-analysis">
-        <TerminalHero insight={insight} imagingMode={imagingMode} onJumpToTimeline={props.onJumpToTimeline} t={t} />
-        <EffectiveImagingWindowDisplay summary={insight.nightSummary} t={t} />
-        <TerminalNightTimeline
+        <TerminalHero
           insight={insight}
-          events={props.events}
           focusedSample={focusedSample}
-          onFocusUtc={props.onFocusUtc}
-          onHoverUtc={props.onHoverUtc}
+          analysisMode={analysisMode}
+          targetBody={targetBody}
+          imagingMode={imagingMode}
+          onJumpToTimeline={props.onJumpToTimeline}
           t={t}
         />
-        <TwilightPhaseTable summary={insight.nightSummary} t={t} />
+        {!isInstantMode && (
+          <>
+            <EffectiveImagingWindowDisplay summary={insight.nightSummary} t={t} />
+            <TerminalNightTimeline
+              insight={insight}
+              events={props.events}
+              focusedSample={focusedSample}
+              onFocusUtc={props.onFocusUtc}
+              onHoverUtc={props.onHoverUtc}
+              t={t}
+            />
+            <TwilightPhaseTable summary={insight.nightSummary} t={t} />
+          </>
+        )}
       </div>
 
       <section className="instrument-cluster" aria-label={t("instrumentCluster")}>
@@ -71,7 +85,7 @@ export function AstroDashboard(props: DashboardProps) {
         </div>
       </section>
 
-      <RetroMultiNightPlanner insight={insight} onDaySelect={props.onDaySelect} t={t} />
+      {!isInstantMode && <RetroMultiNightPlanner insight={insight} onDaySelect={props.onDaySelect} t={t} />}
     </section>
   );
 }

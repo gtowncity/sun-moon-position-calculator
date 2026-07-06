@@ -65,4 +65,19 @@ describe("browser geolocation", () => {
   it("rejects when geolocation is unavailable", async () => {
     await expect(getBrowserLocation(undefined)).rejects.toThrow("geolocationUnsupported");
   });
+
+  it.each([
+    [1, "geolocationDenied"],
+    [2, "geolocationUnavailable"],
+    [3, "geolocationTimeout"],
+    [999, "geolocationUnknown"]
+  ])("maps geolocation error code %s", async (code, expectedMessage) => {
+    const geolocation = {
+      getCurrentPosition: vi.fn((_success: PositionCallback, error: PositionErrorCallback) => {
+        error({ code, message: expectedMessage } as GeolocationPositionError);
+      })
+    } as unknown as Geolocation;
+
+    await expect(getBrowserLocation(geolocation)).rejects.toThrow(expectedMessage);
+  });
 });

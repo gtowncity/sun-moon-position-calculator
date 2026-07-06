@@ -9,7 +9,7 @@ The app analyzes a concrete astro night, for example `05.07.2026 -> 06.07.2026`,
 - Sun, Moon or both bodies in one calculation
 - Manual latitude, longitude and optional elevation
 - Browser geolocation only after an explicit user click
-- Place and postal-code search through Open-Meteo Geocoding
+- Place and postal-code search through Open-Meteo Geocoding with diagnostic error details
 - IANA time-zone dropdown and browser time-zone suggestion
 - Local date/time handling with `@js-temporal/polyfill`
 - Single instant, start/end and start/duration calculation modes
@@ -23,7 +23,7 @@ The app analyzes a concrete astro night, for example `05.07.2026 -> 06.07.2026`,
 - Refraction modes: none, standard and custom pressure/temperature
 - Result table with local time, UTC time, true-north azimuth, geometric/apparent altitude and zenith angle
 - Sun/Moon rise, set and transit event log
-- CSV, XLSX, TXT and Markdown export with metadata
+- XLSX, TXT and Markdown export with metadata; CSV was intentionally removed from the active UI
 - German and English UI through JSON i18n files
 - Optional local saved locations in browser `localStorage`
 
@@ -80,7 +80,9 @@ The amber CRT UI does not change the accuracy stance. It summarizes the runtime 
 
 The app has no backend, no analytics, no cookies for tracking and no API keys. Browser geolocation is requested only after a click. Place/postal-code search sends the search term to Open-Meteo Geocoding. Saved locations are stored only if the user explicitly saves them locally.
 
-If Open-Meteo geocoding fails in a browser, possible causes include network connectivity, DNS, browser extensions, local firewall rules or blocked third-party domains.
+If Open-Meteo geocoding fails in a browser, possible causes include network connectivity, DNS, browser extensions, local firewall rules or blocked third-party domains. The UI shows the request URL and a direct API-test link for diagnosis.
+
+For private use, the app includes a local fallback for `Geiselhöring`, `Geiselhoering` and `94333` with manually provided approximate coordinates. The fallback is clearly labeled and is not an Open-Meteo result.
 
 See `PRIVACY.md`.
 

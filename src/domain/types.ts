@@ -5,6 +5,7 @@ export type TargetBody = CelestialBody | "both";
 export type BodySelection = TargetBody;
 
 export type LocationSource = "manual" | "geolocation" | "geocoding";
+export type GeocodingResultSource = "open-meteo" | "local-fallback";
 export type TimeRangeMode = "single" | "end" | "duration";
 export type RangeMode = TimeRangeMode;
 export type RefractionMode = "none" | "standard" | "custom";
@@ -144,6 +145,7 @@ export interface GeocodingResult {
   elevationMeters?: number;
   timeZone?: string;
   postcodes?: string[];
+  source?: GeocodingResultSource;
 }
 
 export interface BrowserLocationResult extends ObserverLocation {

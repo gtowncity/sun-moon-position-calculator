@@ -20,8 +20,8 @@ export function EventLog({ events, onFocusUtc, t }: EventLogProps) {
 
   return (
     <div className="event-log">
-      {visibleEvents.map((event) => (
-        <button type="button" key={eventKey(event)} onClick={() => onFocusUtc(event.utcTime)} disabled={!event.utcTime}>
+      {visibleEvents.map((event, index) => (
+        <button type="button" key={eventKey(event, index)} onClick={() => onFocusUtc(event.utcTime)} disabled={!event.utcTime}>
           <span>{event.localTime?.slice(0, 5) ?? "--:--"}</span>
           <strong>{event.body === "sun" ? t("sun") : t("moon")}</strong>
           <em>{formatEventKind(event.kind, t)}</em>

@@ -73,8 +73,21 @@ async function gotoApp(page: Page, scenario: string, viewport: AuditViewport = v
 }
 
 async function capture(page: Page, name: string) {
-  await page.screenshot({ path: path.join(auditDir, `${name}.png`), fullPage: true });
-  await page.screenshot({ path: path.join(auditDir, `${name}-above-fold.png`), fullPage: false });
+  const fullPagePath = path.join(auditDir, `${name}.png`);
+  const aboveFoldPath = path.join(auditDir, `${name}-above-fold.png`);
+
+  try {
+    await page.screenshot({ path: fullPagePath, fullPage: true, animations: "disabled", caret: "hide", timeout: 20000 });
+  } catch (error) {
+    note("screenshots", `Full-page screenshot fallback for ${name}: ${error instanceof Error ? error.message : String(error)}`);
+    try {
+      await page.locator("body").screenshot({ path: fullPagePath, animations: "disabled", caret: "hide", timeout: 20000 });
+    } catch {
+      await page.screenshot({ path: fullPagePath, fullPage: false, animations: "disabled", caret: "hide", timeout: 20000 });
+    }
+  }
+
+  await page.screenshot({ path: aboveFoldPath, fullPage: false, animations: "disabled", caret: "hide", timeout: 20000 });
 }
 
 async function clickIfVisible(page: Page, selectorOrRoleName: string | RegExp, scenario: string) {
@@ -139,10 +152,60 @@ async function searchPlace(page: Page, query: string, scenario: string) {
   const searchInput = page.locator(".location-search-panel input").first();
   await searchInput.fill(query);
   await page.getByRole("button", { name: /^search$|^suchen$/i }).click();
-  await page.waitForTimeout(3500);
+  await page
+    .getByRole("button", { name: /^search$|^suchen$/i })
+    .waitFor({ state: "visible", timeout: 12000 })
+    .catch(() => note(scenario, `Search for "${query}" did not settle before screenshot.`));
   const results = await page.locator(".terminal-result-list article").count();
-  const messages = await page.locator(".compact-messages").textContent().catch(() => "");
-  note(scenario, `Geocoding query "${query}" produced ${results} rendered result(s). Messages: ${messages ?? ""}`);
+  const messagesLocator = page.locator(".compact-messages");
+  const diagnosticLocator = page.locator(".geocoding-diagnostic");
+  const resultListLocator = page.locator(".terminal-result-list");
+  const messages = (await messagesLocator.count()) > 0 ? await messagesLocator.textContent({ timeout: 1000 }) : "";
+  const diagnostic = (await diagnosticLocator.count()) > 0 ? await diagnosticLocator.textContent({ timeout: 1000 }) : "";
+  const resultText = (await resultListLocator.count()) > 0 ? await resultListLocator.textContent({ timeout: 1000 }) : "";
+  note(scenario, `Geocoding query "${query}" produced ${results} rendered result(s). Messages: ${messages ?? ""} Diagnostic: ${diagnostic ?? ""}`);
+  return { query, results, messages: messages ?? "", diagnostic: diagnostic ?? "", resultText: resultText ?? "" };
+}
+
+async function mockGeocodingForAudit(page: Page) {
+  await page.route("https://geocoding-api.open-meteo.com/v1/search**", async (route) => {
+    const url = new URL(route.request().url());
+    const name = url.searchParams.get("name") ?? "";
+
+    if (name === "94333") {
+      await route.abort("failed");
+      return;
+    }
+
+    if (name.toLowerCase() === "asdfasdfasdf") {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ results: [] }) });
+      return;
+    }
+
+    if (name.toLowerCase() === "london") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          results: [
+            { id: 1, name: "London", latitude: 51.5072, longitude: -0.1276, elevation: 11, country_code: "GB", country: "United Kingdom", admin1: "England", timezone: "Europe/London", postcodes: ["EC1A"] },
+            { id: 2, name: "London", latitude: 42.9849, longitude: -81.2453, elevation: 251, country_code: "CA", country: "Canada", admin1: "Ontario", timezone: "America/Toronto", postcodes: ["N6A"] }
+          ]
+        })
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        results: [
+          { id: 3, name: "Berlin", latitude: 52.52, longitude: 13.405, elevation: 34, country_code: "DE", country: "Germany", admin1: "Berlin", timezone: "Europe/Berlin", postcodes: ["10115"] }
+        ]
+      })
+    });
+  });
 }
 
 async function newAuditPage(browser: Browser, scenario: string, viewport: AuditViewport = viewports.desktop) {
@@ -150,6 +213,16 @@ async function newAuditPage(browser: Browser, scenario: string, viewport: AuditV
   const page = await context.newPage();
   await gotoApp(page, scenario, viewport);
   return { context, page };
+}
+
+async function captureGeocodingScenario(browser: Browser, query: string, name: string) {
+  const context = await browser.newContext({ viewport: viewports.desktop });
+  const page = await context.newPage();
+  await mockGeocodingForAudit(page);
+  await gotoApp(page, name, viewports.desktop);
+  await searchPlace(page, query, name);
+  await capture(page, name);
+  await context.close();
 }
 
 test("01 initial state, language and CRT states", async ({ page }) => {
@@ -227,6 +300,7 @@ test("05 target body modes", async ({ page }) => {
 
 test("06 manual location, geocoding, gps and saved locations", async ({ page, browser }) => {
   await gotoApp(page, "location-functions", viewports.desktop);
+  await mockGeocodingForAudit(page);
   await setManualLocation(page, "Geiselhoering", "48.825", "12.397", "0", "Europe/Berlin");
   await analyze(page);
   await capture(page, "manual-location-valid");
@@ -243,14 +317,10 @@ test("06 manual location, geocoding, gps and saved locations", async ({ page, br
   await analyze(page);
   await capture(page, "manual-location-empty");
 
-  await searchPlace(page, "Berlin", "geocoding-berlin");
-  await capture(page, "geocoding-berlin");
-  await searchPlace(page, "94333", "geocoding-plz");
-  await capture(page, "geocoding-plz");
-  await searchPlace(page, "asdfasdfasdf", "geocoding-no-result");
-  await capture(page, "geocoding-no-result");
-  await searchPlace(page, "London", "geocoding-multiple-results");
-  await capture(page, "geocoding-multiple-results");
+  await captureGeocodingScenario(browser, "Berlin", "geocoding-berlin");
+  await captureGeocodingScenario(browser, "94333", "geocoding-plz");
+  await captureGeocodingScenario(browser, "asdfasdfasdf", "geocoding-no-result");
+  await captureGeocodingScenario(browser, "London", "geocoding-multiple-results");
 
   await setManualLocation(page, "QA Berlin", "52.520000", "13.405000", "34", "Europe/Berlin");
   await page.getByRole("tab", { name: /saved|gespeicherte/i }).click();
@@ -407,13 +477,13 @@ test("09 data grid, filters and exports", async ({ page }) => {
   await chooseGridBodyFilter(page, grid, 0);
   await grid.getByLabel(/filter rows|zeilen filtern/i).fill("2026");
   await capture(page, "grid-search");
+  await grid.getByLabel(/sort by|sortieren nach/i).selectOption("geometricAltitudeDeg");
+  await capture(page, "grid-sort-altitude");
   await grid.getByLabel(/filter rows|zeilen filtern/i).fill("definitely-no-result");
   await capture(page, "grid-no-results");
-  await capture(page, "grid-sort-altitude");
   await capture(page, "export-panel");
 
   for (const [label, fileName] of [
-    [/^csv$/i, "export-csv"],
     [/^xlsx$/i, "export-xlsx"],
     [/^txt$/i, "export-txt"],
     [/markdown/i, "export-markdown"]

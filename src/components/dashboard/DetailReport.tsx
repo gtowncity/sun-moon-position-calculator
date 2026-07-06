@@ -4,6 +4,7 @@ import { formatEventKind, formatWarning } from "../../lib/export/columns";
 import type { SolarPhaseSummary } from "../../lib/solar/phases";
 import { RetroAccordion } from "../retro/RetroAccordion";
 import { EventLog } from "./EventLog";
+import { eventKey } from "./utils";
 
 interface DetailReportProps {
   events: EventResult[];
@@ -42,12 +43,12 @@ export function DetailReport({ events, firstInstantRows, solarSummaries, onFocus
       <RetroAccordion title={t("currentMoonPosition")}>{positionRows(firstInstantRows, "moon", t)}</RetroAccordion>
       <RetroAccordion title={t("nextSunEvents")}>
         <div className="event-log static-log">
-          {sunEvents.map((event) => <span key={`${event.body}-${event.kind}-${event.utcTime ?? event.localDate}`}>{event.localTime ?? "--:--"} {formatEventKind(event.kind, t)}</span>)}
+          {sunEvents.map((event, index) => <span key={eventKey(event, index)}>{event.localTime ?? "--:--"} {formatEventKind(event.kind, t)}</span>)}
         </div>
       </RetroAccordion>
       <RetroAccordion title={t("nextMoonEvents")}>
         <div className="event-log static-log">
-          {moonEvents.map((event) => <span key={`${event.body}-${event.kind}-${event.utcTime ?? event.localDate}`}>{event.localTime ?? "--:--"} {formatEventKind(event.kind, t)}</span>)}
+          {moonEvents.map((event, index) => <span key={eventKey(event, index)}>{event.localTime ?? "--:--"} {formatEventKind(event.kind, t)}</span>)}
         </div>
       </RetroAccordion>
       <RetroAccordion title={t("twilightSummary")}>

@@ -356,6 +356,16 @@ select,
   grid-column: span 2;
 }
 
+.control-options {
+  grid-column: span 4;
+}
+
+.calculation-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
 .compact-location-display {
   display: grid;
   gap: 0.15rem;
@@ -421,6 +431,24 @@ select,
 .solar-phase-list {
   display: grid;
   gap: 0.55rem;
+}
+
+.geocoding-diagnostic {
+  display: grid;
+  gap: 0.22rem;
+  border: 1px solid var(--danger-amber);
+  background: rgba(255, 107, 26, 0.08);
+  padding: 0.55rem;
+}
+
+.geocoding-diagnostic strong,
+.geocoding-diagnostic a {
+  color: var(--amber-bright);
+}
+
+.geocoding-diagnostic small {
+  color: var(--amber-soft);
+  overflow-wrap: anywhere;
 }
 
 .terminal-result-list article,
@@ -1219,7 +1247,8 @@ tr.is-focused-row td {
   .control-timezone,
   .control-target,
   .control-quality,
-  .control-interval {
+  .control-interval,
+  .control-options {
     grid-column: 1 / -1;
   }
 

@@ -8,6 +8,7 @@ import type {
   RefractionSettings,
   ResultRow,
   SavedLocation,
+  TargetBody,
   TimeRangeMode
 } from "../types";
 import { detectBrowserLanguage, getTranslator, isLanguage, type TranslationKey } from "../i18n";
@@ -15,11 +16,11 @@ import { calculateDailyEvents } from "../astro/events";
 import { standardPressureHpa, standardTemperatureC } from "../astro/common/refraction";
 import { calculatePositions } from "../lib/astronomy/calculator";
 import { downloadBlob, downloadTextFile } from "../lib/export/download";
-import { exportCsv } from "../lib/export/csv";
 import { exportMarkdown } from "../lib/export/markdown";
 import { createExportMetadata } from "../lib/export/metadata";
 import { exportTxt } from "../lib/export/txt";
 import { exportXlsx } from "../lib/export/xlsx";
+import { localFallbackResults } from "../lib/geocoding/localFallback";
 import { GeocodingHttpError, GeocodingNetworkError, OpenMeteoGeocodingProvider } from "../lib/geocoding/openMeteo";
 import { getBrowserLocation } from "../lib/location/geolocation";
 import {
@@ -50,6 +51,15 @@ interface CalculationMeta {
   intervalMinutes: number | null;
   rangeMode: TimeRangeMode;
   refraction: RefractionSettings;
+}
+
+interface GeocodingDiagnostic {
+  title: string;
+  requestUrl?: string;
+  errorName?: string;
+  errorMessage?: string;
+  timestamp?: string;
+  hint: string;
 }
 
 function storedLanguage(): Language {
@@ -162,9 +172,25 @@ function eventDatesFor(sourceForm: CalculationFormState): string[] {
   return [...dates].sort();
 }
 
+function insightBodySelection(selection: TargetBody): TargetBody {
+  return selection === "moon" ? "both" : selection;
+}
+
+function preferredFocusUtc(
+  insight: ReturnType<typeof createDashboardInsight>,
+  fallbackRows: ResultRow[]
+): string | null {
+  return insight.nightSummary?.effectiveWindow?.startUtc ??
+    insight.bestWindow?.startUtc ??
+    insight.samples[0]?.utcTime ??
+    fallbackRows[0]?.utcTime ??
+    null;
+}
+
 export function App() {
   const [form, setForm] = useState<CalculationFormState>(() => createInitialForm());
   const [rows, setRows] = useState<ResultRow[]>([]);
+  const [insightRows, setInsightRows] = useState<ResultRow[]>([]);
   const [events, setEvents] = useState<EventResult[]>([]);
   const [calculationMeta, setCalculationMeta] = useState<CalculationMeta | null>(null);
   const [messages, setMessages] = useState<string[]>([]);
@@ -175,6 +201,7 @@ export function App() {
   const [hoveredUtc, setHoveredUtc] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<import("../types").GeocodingResult[]>([]);
+  const [geocodingDiagnostic, setGeocodingDiagnostic] = useState<GeocodingDiagnostic | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => safeLoadSavedLocations());
@@ -184,14 +211,14 @@ export function App() {
   const t = useMemo(() => getTranslator(form.language), [form.language]);
   const timeZones = useMemo(() => getSupportedTimeZones(), []);
   const geocoder = useMemo(() => new OpenMeteoGeocodingProvider(), []);
-  const insight = useMemo(() => createDashboardInsight(rows, { imagingMode, nightStartDate: form.startDate }), [form.startDate, imagingMode, rows]);
+  const insight = useMemo(() => createDashboardInsight(insightRows, { imagingMode, nightStartDate: form.startDate }), [form.startDate, imagingMode, insightRows]);
   const focusedSample = useMemo(() => findSample(insight.samples, focusedUtc), [focusedUtc, insight.samples]);
   const hoveredSample = useMemo(() => findSample(insight.samples, hoveredUtc), [hoveredUtc, insight.samples]);
-  const solarSummaries = useMemo(() => summarizeSolarPhases(rows), [rows]);
+  const solarSummaries = useMemo(() => summarizeSolarPhases(insightRows), [insightRows]);
   const firstInstantRows = useMemo(() => {
-    const firstUtc = rows[0]?.utcTime;
-    return firstUtc ? rows.filter((row) => row.utcTime === firstUtc) : [];
-  }, [rows]);
+    const firstUtc = insightRows[0]?.utcTime;
+    return firstUtc ? insightRows.filter((row) => row.utcTime === firstUtc) : [];
+  }, [insightRows]);
 
   useEffect(() => {
     localStorage.setItem(languageStorageKey, form.language);
@@ -278,7 +305,14 @@ export function App() {
       setLocationAccuracy(location.accuracyMeters ?? null);
       setMessages([t("autoDetectDone")]);
     } catch (error) {
-      const message = error instanceof Error && (error.message === "geolocationUnsupported" || error.message === "geolocationDenied")
+      const geolocationKeys: TranslationKey[] = [
+        "geolocationUnsupported",
+        "geolocationDenied",
+        "geolocationUnavailable",
+        "geolocationTimeout",
+        "geolocationUnknown"
+      ];
+      const message = error instanceof Error && geolocationKeys.includes(error.message as TranslationKey)
         ? t(error.message as TranslationKey)
         : t("partialAutoDetect");
       setMessages([message === t("partialAutoDetect") ? message : `${t("partialAutoDetect")} ${message}`]);
@@ -286,22 +320,55 @@ export function App() {
   }
 
   async function handleSearch() {
+    const trimmedQuery = searchQuery.trim();
+    const fallbackResults = localFallbackResults(trimmedQuery);
+    const countryCode = form.searchCountryCode || (/^\d+$/.test(trimmedQuery) ? "DE" : undefined);
+
     setIsSearching(true);
     setMessages([]);
+    setSearchResults([]);
+    setGeocodingDiagnostic(null);
 
     try {
-      const results = await geocoder.search(searchQuery, form.language, form.searchCountryCode || undefined);
-      setSearchResults(results);
-      if (results.length === 0) {
+      const results = await geocoder.search(trimmedQuery, form.language, countryCode);
+      const nextResults = results.length === 0 && fallbackResults.length > 0 ? fallbackResults : results;
+      setSearchResults(nextResults);
+      if (results.length === 0 && fallbackResults.length > 0) {
+        setMessages([t("noResults"), t("localFallbackAvailable")]);
+      } else if (results.length === 0) {
         setMessages([t("noResults")]);
       } else if (results.length > 1) {
         setMessages([t("multipleResultsHint")]);
       }
     } catch (error) {
       if (error instanceof GeocodingHttpError) {
-        setMessages([`${t("searchFailed")} HTTP ${error.status}: ${error.reason}`]);
+        setSearchResults(fallbackResults);
+        setGeocodingDiagnostic({
+          title: `${t("searchFailed")} HTTP ${error.status}`,
+          requestUrl: error.requestUrl,
+          errorName: `HTTP ${error.status}`,
+          errorMessage: error.reason,
+          timestamp: new Date().toISOString(),
+          hint: t("geocodingDiagnosticHint")
+        });
+        setMessages([
+          `${t("searchFailed")} HTTP ${error.status}: ${error.reason}`,
+          ...(fallbackResults.length > 0 ? [t("localFallbackAvailable")] : [t("useManualCoordinatesHint")])
+        ]);
       } else if (error instanceof GeocodingNetworkError) {
-        setMessages([t("networkSearchFailed")]);
+        setSearchResults(fallbackResults);
+        setGeocodingDiagnostic({
+          title: error.isTimeout ? t("searchTimeout") : t("networkSearchFailed"),
+          requestUrl: error.requestUrl,
+          errorName: error.originalErrorName,
+          errorMessage: error.originalErrorMessage,
+          timestamp: error.timestamp,
+          hint: t("geocodingDiagnosticHint")
+        });
+        setMessages([
+          error.isTimeout ? t("searchTimeout") : t("networkSearchFailed"),
+          ...(fallbackResults.length > 0 ? [t("localFallbackAvailable")] : [t("useManualCoordinatesHint")])
+        ]);
       } else {
         setMessages([t("searchFailed")]);
       }
@@ -311,6 +378,7 @@ export function App() {
   }
 
   function applyGeocodingResult(result: import("../types").GeocodingResult) {
+    setGeocodingDiagnostic(null);
     updateForm({
       latitude: result.latitude.toFixed(6),
       longitude: result.longitude.toFixed(6),
@@ -389,6 +457,7 @@ export function App() {
 
     if (!coordinates.location || !start.instant || !refraction) {
       setRows([]);
+      setInsightRows([]);
       setEvents([]);
       setCalculationMeta(null);
       if (showMessages) setMessages(nextMessages.length ? nextMessages : [localT("validationErrors")]);
@@ -442,6 +511,7 @@ export function App() {
       nextMessages.includes(localT("invalidIntervalMax"))
     ) {
       setRows([]);
+      setInsightRows([]);
       setEvents([]);
       setCalculationMeta(null);
       if (showMessages) setMessages(nextMessages);
@@ -449,23 +519,27 @@ export function App() {
     }
 
     try {
-      const resultRows = calculatePositions({
+      const analysisRows = calculatePositions({
         instants,
         observer: observerLocation,
-        bodySelection: sourceForm.bodySelection,
+        bodySelection: insightBodySelection(sourceForm.bodySelection),
         timeZone: sourceForm.timeZone,
         options: { refraction, maxTimePoints }
       });
+      const resultRows = sourceForm.bodySelection === "moon"
+        ? analysisRows.filter((row) => row.body === "moon")
+        : analysisRows;
       const eventResults = eventDatesFor(sourceForm).flatMap((localDate) => calculateDailyEvents({
         observer: observerLocation,
-        bodySelection: sourceForm.bodySelection,
+        bodySelection: insightBodySelection(sourceForm.bodySelection),
         timeZone: sourceForm.timeZone,
         localDate,
         refraction
       }));
-      const nextInsight = createDashboardInsight(resultRows, { imagingMode, nightStartDate: sourceForm.startDate });
+      const nextInsight = createDashboardInsight(analysisRows, { imagingMode, nightStartDate: sourceForm.startDate });
 
       setRows(resultRows);
+      setInsightRows(analysisRows);
       setEvents(eventResults);
       setCalculationMeta({
         location: observerLocation,
@@ -475,12 +549,13 @@ export function App() {
         rangeMode: sourceForm.rangeMode,
         refraction
       });
-      setFocusedUtc(nextInsight.nightSummary?.effectiveWindow?.startUtc ?? nextInsight.bestWindow?.startUtc ?? resultRows[0]?.utcTime ?? null);
+      setFocusedUtc(preferredFocusUtc(nextInsight, analysisRows));
       setHoveredUtc(null);
       if (showMessages) setMessages(nextMessages);
       return true;
     } catch {
       setRows([]);
+      setInsightRows([]);
       setEvents([]);
       setCalculationMeta(null);
       if (showMessages) setMessages([...nextMessages, localT("calculationFailed")]);
@@ -490,6 +565,15 @@ export function App() {
 
   function validateAndCalculate() {
     calculateWithForm(form, true);
+  }
+
+  function handleImagingMode(nextMode: ImagingMode) {
+    setImagingMode(nextMode);
+    if (insightRows.length > 0) {
+      const nextInsight = createDashboardInsight(insightRows, { imagingMode: nextMode, nightStartDate: form.startDate });
+      setFocusedUtc(preferredFocusUtc(nextInsight, insightRows));
+      setHoveredUtc(null);
+    }
   }
 
   function applyAnalysisMode(mode: AnalysisMode) {
@@ -547,7 +631,7 @@ export function App() {
   function createMetadata() {
     if (!calculationMeta) return null;
 
-    return createExportMetadata({
+    const metadata = createExportMetadata({
       language: form.language,
       locationName: form.locationName,
       location: calculationMeta.location,
@@ -559,9 +643,18 @@ export function App() {
       rangeMode: calculationMeta.rangeMode,
       refraction: calculationMeta.refraction
     });
+
+    if (form.bodySelection === "moon") {
+      return {
+        ...metadata,
+        accuracyNote: `${metadata.accuracyNote} ${t("moonOnlyInternalSunMetadata")}`
+      };
+    }
+
+    return metadata;
   }
 
-  function handleTextDownload(kind: "csv" | "txt" | "md") {
+  function handleTextDownload(kind: "txt" | "md") {
     const metadata = createMetadata();
     if (!metadata) {
       setMessages([t("validationErrors")]);
@@ -569,7 +662,6 @@ export function App() {
     }
 
     const prefix = t("downloadPrefix");
-    if (kind === "csv") downloadTextFile(filename(prefix, "csv"), exportCsv(rows, events, metadata, t), "text/csv");
     if (kind === "txt") downloadTextFile(filename(prefix, "txt"), exportTxt(rows, events, metadata, t), "text/plain");
     if (kind === "md") downloadTextFile(filename(prefix, "md"), exportMarkdown(rows, events, metadata, t), "text/markdown");
   }
@@ -615,6 +707,7 @@ export function App() {
         timeZones={timeZones}
         searchQuery={searchQuery}
         searchResults={searchResults}
+        geocodingDiagnostic={geocodingDiagnostic}
         savedLocations={savedLocations}
         saveLocationName={saveLocationName}
         isSearching={isSearching}
@@ -625,7 +718,7 @@ export function App() {
         onAnalysisMode={applyAnalysisMode}
         onNightDate={applyNightDate}
         onRangePreset={applyRangePreset}
-        onImagingMode={setImagingMode}
+        onImagingMode={handleImagingMode}
         onSearchQuery={setSearchQuery}
         onSearch={handleSearch}
         onApplyGeocodingResult={applyGeocodingResult}
@@ -645,6 +738,7 @@ export function App() {
         hoveredSample={hoveredSample}
         rangePreset={rangePreset}
         analysisMode={analysisMode}
+        targetBody={form.bodySelection}
         imagingMode={imagingMode}
         language={form.language}
         onRangePreset={applyRangePreset}
@@ -666,7 +760,6 @@ export function App() {
       <ResultDataGrid
         rows={rows}
         focusedUtc={focusedUtc}
-        onCsv={() => handleTextDownload("csv")}
         onXlsx={handleXlsxDownload}
         onTxt={() => handleTextDownload("txt")}
         onMarkdown={() => handleTextDownload("md")}

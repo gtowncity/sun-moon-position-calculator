@@ -1,6 +1,18 @@
 import type { BrowserLocationResult } from "../../types";
 
-export type GeolocationFailure = "geolocationUnsupported" | "geolocationDenied";
+export type GeolocationFailure =
+  | "geolocationUnsupported"
+  | "geolocationDenied"
+  | "geolocationUnavailable"
+  | "geolocationTimeout"
+  | "geolocationUnknown";
+
+function geolocationFailure(error: GeolocationPositionError): GeolocationFailure {
+  if (error.code === 1) return "geolocationDenied";
+  if (error.code === 2) return "geolocationUnavailable";
+  if (error.code === 3) return "geolocationTimeout";
+  return "geolocationUnknown";
+}
 
 export function getBrowserLocation(
   geolocation: Geolocation | undefined = navigator.geolocation
@@ -19,7 +31,7 @@ export function getBrowserLocation(
           accuracyMeters: position.coords.accuracy
         });
       },
-      () => reject(new Error("geolocationDenied" satisfies GeolocationFailure)),
+      (error) => reject(new Error(geolocationFailure(error))),
       {
         enableHighAccuracy: true,
         timeout: 10000,

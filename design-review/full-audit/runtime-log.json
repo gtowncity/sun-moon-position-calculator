@@ -1,89 +1,5 @@
 [
   {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-rise-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
-    "kind": "console",
-    "scenario": "night-date-scenarios",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s sun-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
-    "url": "http://127.0.0.1:5173/"
-  },
-  {
     "kind": "note",
     "scenario": "imaging-modes",
     "message": "Mode changes are captured without pressing Analyze again to reveal whether derived focus/window state updates automatically."
@@ -91,38 +7,39 @@
   {
     "kind": "note",
     "scenario": "geocoding-berlin",
-    "message": "Geocoding query \"Berlin\" produced 0 rendered result(s). Messages: Location search failed: network error."
+    "message": "Geocoding query \"Berlin\" produced 1 rendered result(s). Messages:  Diagnostic: "
   },
   {
-    "kind": "note",
+    "kind": "requestfailed",
     "scenario": "geocoding-plz",
-    "message": "Geocoding query \"94333\" produced 0 rendered result(s). Messages: Location search failed: network error."
-  },
-  {
-    "kind": "note",
-    "scenario": "geocoding-no-result",
-    "message": "Geocoding query \"asdfasdfasdf\" produced 0 rendered result(s). Messages: Location search failed: network error."
-  },
-  {
-    "kind": "note",
-    "scenario": "geocoding-multiple-results",
-    "message": "Geocoding query \"London\" produced 0 rendered result(s). Messages: Location search failed: network error."
+    "message": "GET https://geocoding-api.open-meteo.com/v1/search?name=94333&count=10&language=en&format=json&countryCode=DE net::ERR_FAILED",
+    "url": "http://127.0.0.1:5173/"
   },
   {
     "kind": "console",
-    "scenario": "interactive-analysis",
-    "message": "error: Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s moon-set-null \n    at div\n    at div\n    at details\n    at RetroAccordion (http://127.0.0.1:5173/src/components/retro/RetroAccordion.tsx:3:34)\n    at section\n    at DetailReport (http://127.0.0.1:5173/src/components/dashboard/DetailReport.tsx:92:32)\n    at section\n    at RetroWindow (http://127.0.0.1:5173/src/components/retro/RetroWindow.tsx:3:31)\n    at main\n    at div\n    at CrtScreen (http://127.0.0.1:5173/src/components/retro/CrtScreen.tsx:3:29)\n    at TerminalAppFrame (http://127.0.0.1:5173/src/components/dashboard/TerminalAppFrame.tsx:9:36)\n    at App (http://127.0.0.1:5173/src/app/App.tsx:132:26)",
+    "scenario": "geocoding-plz",
+    "message": "error: Failed to load resource: net::ERR_FAILED",
     "url": "http://127.0.0.1:5173/"
   },
   {
     "kind": "note",
-    "scenario": "exports",
-    "message": "export-csv: solar-lunar-positions.csv size=39172"
+    "scenario": "geocoding-plz",
+    "message": "Geocoding query \"94333\" produced 1 rendered result(s). Messages: Location search failed: network error.A local fallback result is available. It is not an Open-Meteo result. Diagnostic: Location search failed: network error.Open API test URLRequest URL: https://geocoding-api.open-meteo.com/v1/search?name=94333&count=10&language=en&format=json&countryCode=DEBrowser error name: TypeErrorBrowser error message: Failed to fetchTimestamp: 2026-07-06T11:05:11.365ZCheck internet connection, browser extensions, DNS, or whether the URL opens directly in the browser. No location was applied automatically."
+  },
+  {
+    "kind": "note",
+    "scenario": "geocoding-no-result",
+    "message": "Geocoding query \"asdfasdfasdf\" produced 0 rendered result(s). Messages: No results found. Diagnostic: "
+  },
+  {
+    "kind": "note",
+    "scenario": "geocoding-multiple-results",
+    "message": "Geocoding query \"London\" produced 2 rendered result(s). Messages: Multiple matches are possible. Please select an unambiguous place. Diagnostic: "
   },
   {
     "kind": "note",
     "scenario": "exports",
-    "message": "export-xlsx: solar-lunar-positions.xlsx size=38475"
+    "message": "export-xlsx: solar-lunar-positions.xlsx size=38477"
   },
   {
     "kind": "note",

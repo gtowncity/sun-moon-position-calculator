@@ -49,8 +49,8 @@ export function percentForUtc(samples: TimeSample[], utcTime: string): number {
   return Math.max(0, Math.min(100, ((value - first) / Math.max(1, last - first)) * 100));
 }
 
-export function eventKey(event: EventResult): string {
-  return `${event.body}-${event.kind}-${event.utcTime ?? event.localDate ?? "none"}`;
+export function eventKey(event: EventResult, index = 0): string {
+  return `${event.body}-${event.kind}-${event.status}-${event.localDate ?? "no-date"}-${event.utcTime ?? "no-utc"}-${index}`;
 }
 
 export function nightQualityToken(quality: string | undefined): string {

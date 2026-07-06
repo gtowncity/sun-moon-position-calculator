@@ -17,6 +17,14 @@ interface ControlPanelProps {
   timeZones: string[];
   searchQuery: string;
   searchResults: GeocodingResult[];
+  geocodingDiagnostic: {
+    title: string;
+    requestUrl?: string;
+    errorName?: string;
+    errorMessage?: string;
+    timestamp?: string;
+    hint: string;
+  } | null;
   savedLocations: SavedLocation[];
   saveLocationName: string;
   isSearching: boolean;
@@ -72,6 +80,7 @@ export function ControlPanel({
   timeZones,
   searchQuery,
   searchResults,
+  geocodingDiagnostic,
   savedLocations,
   saveLocationName,
   isSearching,
@@ -103,12 +112,20 @@ export function ControlPanel({
       <RetroTabs options={modeTabs(t)} value={analysisMode} onChange={onAnalysisMode} label={t("analysisMode")} />
 
       <div className="control-panel-grid">
-        <RetroFieldset legend={t("nightDate")} className="control-night">
+        <RetroFieldset legend={analysisMode === "instant" ? t("singleInstant") : t("nightDate")} className="control-night">
           <label>
             {t("date")}
             <RetroInput type="date" value={form.startDate} onChange={(event) => onNightDate(event.target.value)} />
           </label>
-          <p className="compact-hint">{t("oneNightSpan")}: {form.startDate} -&gt; {form.endDate}</p>
+          {(analysisMode === "instant" || analysisMode === "custom") && (
+            <label>
+              {t("time")}
+              <RetroInput type="time" value={form.startTime} onChange={(event) => onUpdateForm({ startTime: event.target.value })} />
+            </label>
+          )}
+          <p className="compact-hint">
+            {analysisMode === "instant" ? t("singleInstantHint") : `${t("oneNightSpan")}: ${form.startDate} -> ${form.endDate}`}
+          </p>
         </RetroFieldset>
 
         <RetroFieldset legend={t("locationSection")} className="control-location">
@@ -154,6 +171,20 @@ export function ControlPanel({
             <RetroInput value={form.customIntervalMinutes} inputMode="numeric" onChange={(event) => onUpdateForm({ customIntervalMinutes: event.target.value })} />
           )}
         </RetroFieldset>
+
+        <RetroFieldset legend={t("calculationOptions")} className="control-options">
+          <label>{t("refractionMode")}<RetroSelect value={form.refractionMode} onChange={(event) => onUpdateForm({ refractionMode: event.target.value as RefractionMode })}>
+            <option value="none">{t("refractionNone")}</option>
+            <option value="standard">{t("refractionStandard")}</option>
+            <option value="custom">{t("refractionCustom")}</option>
+          </RetroSelect></label>
+          {form.refractionMode === "custom" && (
+            <div className="calculation-options-grid">
+              <label>{t("pressureHpa")}<RetroInput value={form.pressureHpa} inputMode="decimal" onChange={(event) => onUpdateForm({ pressureHpa: event.target.value })} /></label>
+              <label>{t("temperatureC")}<RetroInput value={form.temperatureC} inputMode="decimal" onChange={(event) => onUpdateForm({ temperatureC: event.target.value })} /></label>
+            </div>
+          )}
+        </RetroFieldset>
       </div>
 
       {analysisMode === "multi" && (
@@ -192,17 +223,6 @@ export function ControlPanel({
               <label>{t("latitude")}<RetroInput value={form.latitude} inputMode="decimal" onChange={(event) => onUpdateManualLocation({ latitude: event.target.value })} /></label>
               <label>{t("longitude")}<RetroInput value={form.longitude} inputMode="decimal" onChange={(event) => onUpdateManualLocation({ longitude: event.target.value })} /></label>
               <label>{t("elevationMeters")}<RetroInput value={form.elevationMeters} inputMode="decimal" onChange={(event) => onUpdateManualLocation({ elevationMeters: event.target.value })} /></label>
-              <label>{t("refractionMode")}<RetroSelect value={form.refractionMode} onChange={(event) => onUpdateForm({ refractionMode: event.target.value as RefractionMode })}>
-                <option value="none">{t("refractionNone")}</option>
-                <option value="standard">{t("refractionStandard")}</option>
-                <option value="custom">{t("refractionCustom")}</option>
-              </RetroSelect></label>
-              {form.refractionMode === "custom" && (
-                <>
-                  <label>{t("pressureHpa")}<RetroInput value={form.pressureHpa} inputMode="decimal" onChange={(event) => onUpdateForm({ pressureHpa: event.target.value })} /></label>
-                  <label>{t("temperatureC")}<RetroInput value={form.temperatureC} inputMode="decimal" onChange={(event) => onUpdateForm({ temperatureC: event.target.value })} /></label>
-                </>
-              )}
             </div>
           )}
           {locationTab === "search" && (
@@ -219,6 +239,19 @@ export function ControlPanel({
                 </RetroSelect>
               </label>
               <p className="hint">{t("geocodingNotice")}</p>
+              {geocodingDiagnostic && (
+                <div className="geocoding-diagnostic">
+                  <strong>{geocodingDiagnostic.title}</strong>
+                  {geocodingDiagnostic.requestUrl && (
+                    <a href={geocodingDiagnostic.requestUrl} target="_blank" rel="noreferrer">{t("openApiTestUrl")}</a>
+                  )}
+                  {geocodingDiagnostic.requestUrl && <small>{t("requestUrl")}: {geocodingDiagnostic.requestUrl}</small>}
+                  {geocodingDiagnostic.errorName && <small>{t("browserErrorName")}: {geocodingDiagnostic.errorName}</small>}
+                  {geocodingDiagnostic.errorMessage && <small>{t("browserErrorMessage")}: {geocodingDiagnostic.errorMessage}</small>}
+                  {geocodingDiagnostic.timestamp && <small>{t("timestamp")}: {geocodingDiagnostic.timestamp}</small>}
+                  <small>{geocodingDiagnostic.hint}</small>
+                </div>
+              )}
               {searchResults.length > 0 && (
                 <div className="search-results terminal-result-list">
                   {searchResults.map((result) => (
@@ -228,7 +261,7 @@ export function ControlPanel({
                         <span>{result.postcodes?.join(", ") || ""}</span>
                         <span>{[result.admin1, result.country].filter(Boolean).join(", ")}</span>
                         <small>{result.latitude.toFixed(6)}, {result.longitude.toFixed(6)} | {t("elevationMeters")}: {(result.elevationMeters ?? 0).toFixed(1)} | {result.timeZone ?? "-"}</small>
-                        <em>{t("sourceOpenMeteo")}</em>
+                        <em>{result.source === "local-fallback" ? t("sourceLocalFallback") : t("sourceOpenMeteo")}</em>
                       </div>
                       <RetroButton type="button" onClick={() => onApplyGeocodingResult(result)}>{t("useResult")}</RetroButton>
                     </article>
@@ -272,10 +305,10 @@ export function ControlPanel({
         </section>
       )}
 
-      {messages.length > 0 && <section className="messages compact-messages" aria-live="polite">{messages.map((message) => <p key={message}>{message}</p>)}</section>}
+      {messages.length > 0 && <section className="messages compact-messages" aria-live="polite">{messages.map((message, index) => <p key={`${message}-${index}`}>{message}</p>)}</section>}
 
       <div className="analyze-row">
-        <RetroButton type="button" variant="primary" onClick={onCalculate}>{t("analyzeNight")}</RetroButton>
+        <RetroButton type="button" variant="primary" onClick={onCalculate}>{analysisMode === "instant" ? t("calculateInstant") : t("analyzeNight")}</RetroButton>
       </div>
     </section>
   );
