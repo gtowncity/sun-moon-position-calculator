@@ -1,5 +1,37 @@
 # CHANGELOG.md
 
+## 2026-07-06
+
+### Changed
+
+- Rebuilt the information architecture around a Win95-inspired amber CRT terminal application frame.
+- Replaced the scattered card layout with:
+  - Terminal topbar, menu and statusbar
+  - Compact control panel
+  - Main astro night analysis
+  - Large night timeline
+  - Twilight phase table
+  - Instrument cluster
+  - Multi-night database
+  - Collapsible detail report
+  - Retro result data grid with attached exports
+- Moved exports to the result data grid.
+- Reworked CSS into a single amber CRT design system with bevels, monospace typography, scanlines, glow and a CRT FX toggle.
+- Added reusable retro components and split dashboard sections into dedicated files.
+- Added terminal-style quality diagnostics.
+- Updated Playwright design screenshots to write final review artifacts.
+
+### Fixed
+
+- Removed the layout expansion bug where the control panel could become thousands of pixels wide due grid min-content sizing.
+- Removed old broad layout hacks in favor of targeted grid classes.
+
+### Notes
+
+- CSV, XLSX, TXT and Markdown exports remain available.
+- No NREL-SPA code was copied or ported.
+- No JPL-Horizons values were invented.
+
 ## 2026-07-05
 
 ### Added

@@ -1,24 +1,10 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { Temporal } from "@js-temporal/polyfill";
-import {
-  Calculator,
-  Download,
-  FileSpreadsheet,
-  FileText,
-  Languages,
-  LocateFixed,
-  MapPin,
-  Save,
-  Search,
-  Telescope,
-  Trash2
-} from "lucide-react";
 import type {
   CalculationFormState,
   EventResult,
   Language,
   ObserverLocation,
-  RefractionMode,
   RefractionSettings,
   ResultRow,
   SavedLocation,
@@ -34,7 +20,6 @@ import { exportMarkdown } from "../lib/export/markdown";
 import { createExportMetadata } from "../lib/export/metadata";
 import { exportTxt } from "../lib/export/txt";
 import { exportXlsx } from "../lib/export/xlsx";
-import { formatEventKind, formatWarning } from "../lib/export/columns";
 import { GeocodingHttpError, GeocodingNetworkError, OpenMeteoGeocodingProvider } from "../lib/geocoding/openMeteo";
 import { getBrowserLocation } from "../lib/location/geolocation";
 import {
@@ -45,16 +30,17 @@ import {
 } from "../lib/location/savedLocations";
 import { validateCoordinates } from "../lib/location/validation";
 import { parseDecimalNumber } from "../lib/numberParsing";
-import { sortResultRows } from "../lib/results/sort";
 import { summarizeSolarPhases } from "../lib/solar/phases";
 import { addHours, generateIntervalInstants, getNowParts, localDateTimeToInstant, maxTimePoints } from "../lib/time/dateTime";
 import { getBrowserTimeZone, getSupportedTimeZones, isValidTimeZone } from "../lib/time/timeZones";
 import { createDashboardInsight, findSample } from "./insights";
 import { AstroDashboard, type AnalysisMode, type RangePreset } from "../components/AstroDashboard";
-import { ResultTable } from "../components/ResultTable";
+import { ControlPanel } from "../components/dashboard/ControlPanel";
+import { DetailReport } from "../components/dashboard/DetailReport";
+import { ResultDataGrid } from "../components/dashboard/ResultDataGrid";
+import { TerminalAppFrame } from "../components/dashboard/TerminalAppFrame";
 import type { ImagingMode } from "../domain/insights/effectiveImagingWindow";
 
-const intervalOptions = [1, 5, 10, 15, 30, 60];
 const languageStorageKey = "solar-lunar-position-tool.language";
 
 interface CalculationMeta {
@@ -115,14 +101,6 @@ function safeLoadSavedLocations(): SavedLocation[] {
 
 function numericInput(value: string): number | null {
   return parseDecimalNumber(value, { required: true });
-}
-
-function formatAngle(value: number | null | undefined): string {
-  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(3) : "";
-}
-
-function countryOptions() {
-  return ["", "DE", "US", "GB", "AU", "FR", "ES", "IT", "NL", "AT", "CH"];
 }
 
 function datePlusDays(date: string, days: number): string {
@@ -201,11 +179,11 @@ export function App() {
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>(() => safeLoadSavedLocations());
   const [saveLocationName, setSaveLocationName] = useState("");
+  const [crtEnabled, setCrtEnabled] = useState(true);
 
   const t = useMemo(() => getTranslator(form.language), [form.language]);
   const timeZones = useMemo(() => getSupportedTimeZones(), []);
   const geocoder = useMemo(() => new OpenMeteoGeocodingProvider(), []);
-  const sortedRows = useMemo(() => sortResultRows(rows), [rows]);
   const insight = useMemo(() => createDashboardInsight(rows, { imagingMode, nightStartDate: form.startDate }), [form.startDate, imagingMode, rows]);
   const focusedSample = useMemo(() => findSample(insight.samples, focusedUtc), [focusedUtc, insight.samples]);
   const hoveredSample = useMemo(() => findSample(insight.samples, hoveredUtc), [hoveredUtc, insight.samples]);
@@ -276,10 +254,6 @@ export function App() {
     }
 
     return { mode, pressureHpa, temperatureC };
-  }
-
-  function currentRefractionSettings(nextMessages: string[]): RefractionSettings | null {
-    return currentRefractionSettingsFor(form, nextMessages, t);
   }
 
   async function handleAutoDetect() {
@@ -614,90 +588,55 @@ export function App() {
     );
   }
 
-  function renderPositionSummary(body: "sun" | "moon") {
-    const row = firstInstantRows.find((item) => item.body === body);
-    if (!row) return null;
-
-    return (
-      <article className="summary-card">
-        <h3>{body === "sun" ? t("currentSunPosition") : t("currentMoonPosition")}</h3>
-        <span>{t("columnAzimuthDeg")}: {formatAngle(row.azimuthDeg)}</span>
-        <span>{t("columnApparentAltitudeDeg")}: {formatAngle(row.apparentAltitudeDeg)}</span>
-        <span>{t("columnGeometricAltitudeDeg")}: {formatAngle(row.geometricAltitudeDeg)}</span>
-        {row.phaseName && <span>{t("columnPhaseName")}: {t(row.phaseName)}</span>}
-        {row.warnings.length > 0 && <span>{row.warnings.map((warning) => formatWarning(warning, t)).join(", ")}</span>}
-      </article>
-    );
-  }
-
-  function renderEvents(body: "sun" | "moon") {
-    const bodyEvents = events.filter((event) => event.body === body);
-    if (bodyEvents.length === 0) return null;
-
-    return (
-      <article className="summary-card">
-        <h3>{body === "sun" ? t("nextSunEvents") : t("nextMoonEvents")}</h3>
-        {bodyEvents.map((event) => (
-          <span key={`${event.body}-${event.kind}-${event.utcTime ?? event.localDate ?? "none"}`}>
-            {formatEventKind(event.kind, t)}: {event.status === "found" ? `${event.localTime} ${event.timeZone}` : t("noEvent")}
-          </span>
-        ))}
-      </article>
-    );
-  }
+  const statusItems = [
+    t("ready"),
+    `${t("locationStatus")}: ${(form.locationName || t("manualLocation")).toUpperCase()}`,
+    `TZ: ${form.timeZone}`,
+    `${t("modeStatus")}: ${t(`analysisMode_${analysisMode}` as TranslationKey).toUpperCase()}`,
+    `${t("nightStatus")}: ${insight.nightSummary?.nightLabel ?? form.startDate}`,
+    `${t("rows")}: ${rows.length}`,
+    `CRT FX: ${crtEnabled ? "ON" : "OFF"}`
+  ];
 
   return (
-    <main className="app-shell">
-      <section className="topbar card" aria-label={t("language")}>
-        <div>
-          <h1>{t("appTitle")}</h1>
-          <p>{t("accuracyNotice")}</p>
-          <details>
-            <summary>{t("details")}</summary>
-            <p>{t("definitionsHelp")}</p>
-          </details>
-        </div>
-        <label className="inline-control">
-          <Languages size={18} aria-hidden="true" />
-          <span>{t("language")}</span>
-          <select value={form.language} onChange={(event) => updateForm({ language: event.target.value as Language })}>
-            <option value="de">{t("german")}</option>
-            <option value="en">{t("english")}</option>
-          </select>
-        </label>
-      </section>
-
-      <section className="analysis-panel card" aria-label={t("analysisMode")}>
-        <div className="analysis-copy">
-          <span className="eyebrow"><Telescope size={18} aria-hidden="true" /> {t("astroNightCalculator")}</span>
-          <h2>{t("analysisMode")}</h2>
-          <p>{insight.nightSummary ? `${t("nightFrom")}: ${insight.nightSummary.nightLabel}` : t("analysisModeHint")}</p>
-        </div>
-        <div className="analysis-controls">
-          <div className="analysis-mode-buttons" role="group" aria-label={t("analysisMode")}>
-            {(["instant", "night", "multi", "custom"] as const).map((mode) => (
-              <button
-                type="button"
-                key={mode}
-                className={analysisMode === mode ? "is-active" : ""}
-                onClick={() => applyAnalysisMode(mode)}
-              >
-                {t(`analysisMode_${mode}` as TranslationKey)}
-              </button>
-            ))}
-          </div>
-          <label>{t("nightDate")}
-            <input type="date" value={form.startDate} onChange={(event) => applyNightDate(event.target.value)} />
-          </label>
-          <label>{t("imagingMode")}
-            <select value={imagingMode} onChange={(event) => setImagingMode(event.target.value as ImagingMode)}>
-              <option value="strict">{t("imagingMode_strict")}</option>
-              <option value="balanced">{t("imagingMode_balanced")}</option>
-              <option value="bright">{t("imagingMode_bright")}</option>
-            </select>
-          </label>
-        </div>
-      </section>
+    <TerminalAppFrame
+      language={form.language}
+      onLanguageChange={(language: Language) => updateForm({ language })}
+      crtEnabled={crtEnabled}
+      onToggleCrt={() => setCrtEnabled((enabled) => !enabled)}
+      statusItems={statusItems}
+      t={t}
+    >
+      <ControlPanel
+        form={form}
+        analysisMode={analysisMode}
+        imagingMode={imagingMode}
+        rangePreset={rangePreset}
+        timeZones={timeZones}
+        searchQuery={searchQuery}
+        searchResults={searchResults}
+        savedLocations={savedLocations}
+        saveLocationName={saveLocationName}
+        isSearching={isSearching}
+        locationAccuracy={locationAccuracy}
+        messages={messages}
+        onUpdateForm={updateForm}
+        onUpdateManualLocation={updateManualLocation}
+        onAnalysisMode={applyAnalysisMode}
+        onNightDate={applyNightDate}
+        onRangePreset={applyRangePreset}
+        onImagingMode={setImagingMode}
+        onSearchQuery={setSearchQuery}
+        onSearch={handleSearch}
+        onApplyGeocodingResult={applyGeocodingResult}
+        onAutoDetect={handleAutoDetect}
+        onSaveLocationName={setSaveLocationName}
+        onSaveCurrentLocation={handleSaveCurrentLocation}
+        onApplySavedLocation={handleApplySavedLocation}
+        onDeleteSavedLocation={handleDeleteSavedLocation}
+        onCalculate={validateAndCalculate}
+        t={t}
+      />
 
       <AstroDashboard
         insight={insight}
@@ -707,6 +646,7 @@ export function App() {
         rangePreset={rangePreset}
         analysisMode={analysisMode}
         imagingMode={imagingMode}
+        language={form.language}
         onRangePreset={applyRangePreset}
         onFocusUtc={setFocusedUtc}
         onHoverUtc={setHoveredUtc}
@@ -715,201 +655,25 @@ export function App() {
         t={t}
       />
 
-      <section className="control-grid">
-        <fieldset className="card">
-          <legend>{t("bodySection")}</legend>
-          <div className="segmented">
-            {(["sun", "moon", "both"] as const).map((selection) => (
-              <label key={selection}>
-                <input type="radio" name="body" checked={form.bodySelection === selection} onChange={() => updateForm({ bodySelection: selection })} />
-                <span>{t(selection)}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+      <DetailReport
+        events={events}
+        firstInstantRows={firstInstantRows}
+        solarSummaries={solarSummaries}
+        onFocusUtc={setFocusedUtc}
+        t={t}
+      />
 
-        <fieldset className="card location-card">
-          <legend>{t("locationSection")}</legend>
-          <section>
-            <h2>{t("manualLocation")}</h2>
-            <div className="field-row">
-              <label>{t("locationName")}<input value={form.locationName} onChange={(event) => updateManualLocation({ locationName: event.target.value })} /></label>
-              <label>{t("latitude")}<input value={form.latitude} inputMode="decimal" onChange={(event) => updateManualLocation({ latitude: event.target.value })} /></label>
-              <label>{t("longitude")}<input value={form.longitude} inputMode="decimal" onChange={(event) => updateManualLocation({ longitude: event.target.value })} /></label>
-              <label>{t("elevationMeters")}<input value={form.elevationMeters} inputMode="decimal" onChange={(event) => updateManualLocation({ elevationMeters: event.target.value })} /></label>
-            </div>
-          </section>
-
-          <section>
-            <h2>{t("geocodingLocation")}</h2>
-            <label>{t("locationSearch")}
-              <div className="search-row">
-                <input value={searchQuery} placeholder={t("searchPlaceholder")} onChange={(event) => setSearchQuery(event.target.value)} />
-                <button type="button" className="icon-button" onClick={handleSearch} disabled={isSearching}>
-                  <Search size={17} aria-hidden="true" />{t("search")}
-                </button>
-              </div>
-            </label>
-            <label>{t("searchCountry")}
-              <select value={form.searchCountryCode} onChange={(event) => updateForm({ searchCountryCode: event.target.value })}>
-                {countryOptions().map((country) => <option key={country || "any"} value={country}>{country || t("countryAny")}</option>)}
-              </select>
-            </label>
-            <p className="hint">{t("geocodingNotice")}</p>
-            {searchResults.length > 0 && (
-              <div className="search-results">
-                {searchResults.map((result) => (
-                  <button key={result.id} type="button" onClick={() => applyGeocodingResult(result)}>
-                    <MapPin size={16} aria-hidden="true" />
-                    <span>{result.name}, {result.admin1 ? `${result.admin1}, ` : ""}{result.country} ({result.latitude.toFixed(4)}, {result.longitude.toFixed(4)})</span>
-                    <strong>{t("useResult")}</strong>
-                  </button>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2>{t("savedLocations")}</h2>
-            <p className="hint">{t("savedLocationsNotice")}</p>
-            <div className="search-row">
-              <input value={saveLocationName} placeholder={t("savedLocationNamePlaceholder")} onChange={(event) => setSaveLocationName(event.target.value)} />
-              <button type="button" onClick={handleSaveCurrentLocation}><Save size={17} aria-hidden="true" />{t("saveCurrentLocation")}</button>
-            </div>
-            {savedLocations.length === 0 ? <p className="empty-state">{t("noSavedLocations")}</p> : (
-              <div className="saved-list">
-                {savedLocations.map((location) => (
-                  <div key={location.id} className="saved-location">
-                    <span><strong>{location.name}</strong> {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}</span>
-                    <button type="button" onClick={() => handleApplySavedLocation(location)}>{t("applySavedLocation")}</button>
-                    <button type="button" className="danger-button" onClick={() => handleDeleteSavedLocation(location.id)}><Trash2 size={16} aria-hidden="true" />{t("deleteSavedLocation")}</button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section>
-            <h2>{t("automaticLocation")}</h2>
-            <button type="button" className="secondary-button wide" onClick={handleAutoDetect}><LocateFixed size={17} aria-hidden="true" />{t("autoDetect")}</button>
-            {locationAccuracy !== null && <p className="hint">{t("geolocationAccuracy")}: {locationAccuracy.toFixed(0)} {t("meters")}</p>}
-          </section>
-        </fieldset>
-
-        <fieldset className="card">
-          <legend>{t("timeSection")}</legend>
-          <div className="field-row">
-            <label>{t("date")}<input type="date" value={form.startDate} onChange={(event) => updateForm({ startDate: event.target.value })} /></label>
-            <label>{t("dateText")}<input value={form.startDate} onChange={(event) => updateForm({ startDate: event.target.value })} /></label>
-            <label>{t("time")}<input type="time" value={form.startTime} onChange={(event) => updateForm({ startTime: event.target.value })} /></label>
-          </div>
-          <label>{t("timeZone")}
-            <select value={form.timeZone} onChange={(event) => updateForm({ timeZone: event.target.value })}>
-              {timeZones.map((zone) => <option key={zone} value={zone}>{zone}</option>)}
-            </select>
-          </label>
-        </fieldset>
-
-        <fieldset className="card">
-          <legend>{t("rangeSection")}</legend>
-          <div className="segmented">
-            {(["single", "end", "duration"] as const).map((mode) => (
-              <label key={mode}>
-                <input type="radio" name="range" checked={form.rangeMode === mode} onChange={() => updateForm({ rangeMode: mode })} />
-                <span>{mode === "single" ? t("singleInstant") : mode === "end" ? t("startEnd") : t("startDuration")}</span>
-              </label>
-            ))}
-          </div>
-          {form.rangeMode === "end" && (
-            <div className="field-row">
-              <label>{t("endDate")}<input type="date" value={form.endDate} onChange={(event) => updateForm({ endDate: event.target.value })} /></label>
-              <label>{t("endTime")}<input type="time" value={form.endTime} onChange={(event) => updateForm({ endTime: event.target.value })} /></label>
-            </div>
-          )}
-          {form.rangeMode === "duration" && <label>{t("durationHours")}<input value={form.durationHours} inputMode="decimal" onChange={(event) => updateForm({ durationHours: event.target.value })} /></label>}
-          {form.rangeMode !== "single" && (
-            <>
-              <label>{t("interval")}
-                <select value={form.intervalPreset} onChange={(event) => updateForm({ intervalPreset: event.target.value, intervalMinutes: Number(event.target.value) || form.intervalMinutes })}>
-                  {intervalOptions.map((minutes) => <option key={minutes} value={String(minutes)}>{minutes} {t("minutes")}</option>)}
-                  <option value="custom">{t("customInterval")}</option>
-                </select>
-              </label>
-              {form.intervalPreset === "custom" && <label>{t("customIntervalMinutes")}<input value={form.customIntervalMinutes} inputMode="numeric" onChange={(event) => updateForm({ customIntervalMinutes: event.target.value })} /></label>}
-            </>
-          )}
-        </fieldset>
-
-        <fieldset className="card">
-          <legend>{t("optionsSection")}</legend>
-          <label>{t("refractionMode")}
-            <select value={form.refractionMode} onChange={(event) => updateForm({ refractionMode: event.target.value as RefractionMode })}>
-              <option value="none">{t("refractionNone")}</option>
-              <option value="standard">{t("refractionStandard")}</option>
-              <option value="custom">{t("refractionCustom")}</option>
-            </select>
-          </label>
-          {form.refractionMode === "custom" && (
-            <div className="field-row">
-              <label>{t("pressureHpa")}<input value={form.pressureHpa} inputMode="decimal" onChange={(event) => updateForm({ pressureHpa: event.target.value })} /></label>
-              <label>{t("temperatureC")}<input value={form.temperatureC} inputMode="decimal" onChange={(event) => updateForm({ temperatureC: event.target.value })} /></label>
-            </div>
-          )}
-          <p className="hint">{t("nearHorizonWarning")}</p>
-        </fieldset>
-      </section>
-
-      {messages.length > 0 && <section className="messages" aria-live="polite">{messages.map((message) => <p key={message}>{message}</p>)}</section>}
-
-      <section className="actions card">
-        <button type="button" className="primary-button" onClick={validateAndCalculate}><Calculator size={18} aria-hidden="true" />{t("calculate")}</button>
-        {rows.length > 0 && (
-          <>
-            <button type="button" onClick={() => handleTextDownload("csv")}><Download size={17} aria-hidden="true" />{t("exportCsv")}</button>
-            <button type="button" onClick={handleXlsxDownload}><FileSpreadsheet size={17} aria-hidden="true" />{t("exportXlsx")}</button>
-            <button type="button" onClick={() => handleTextDownload("txt")}><FileText size={17} aria-hidden="true" />{t("exportTxt")}</button>
-            <button type="button" onClick={() => handleTextDownload("md")}><Download size={17} aria-hidden="true" />{t("exportMarkdown")}</button>
-          </>
-        )}
-      </section>
-
-      {rows.length > 0 && (
-        <section className="results-section card">
-          <h2>{t("summarySection")}</h2>
-          <div className="summary-grid">
-            {renderPositionSummary("sun")}
-            {renderPositionSummary("moon")}
-            {renderEvents("sun")}
-            {renderEvents("moon")}
-          </div>
-        </section>
-      )}
-
-      {solarSummaries.length > 0 && (
-        <section className="results-section card">
-          <h2>{t("twilightSummary")}</h2>
-          <p className="hint">{t("twilightSummaryNote")}</p>
-          <div className="phase-grid">
-            {solarSummaries.map((summary) => (
-              <div key={summary.localDate} className="phase-card">
-                <strong>{summary.localDate}</strong>
-                <span>{t("day")}: {summary.phases.day ?? t("notInRange")}</span>
-                <span>{t("civilTwilight")}: {summary.phases.civilTwilight ?? t("notInRange")}</span>
-                <span>{t("nauticalTwilight")}: {summary.phases.nauticalTwilight ?? t("notInRange")}</span>
-                <span>{t("astronomicalTwilight")}: {summary.phases.astronomicalTwilight ?? t("notInRange")}</span>
-                <span>{t("night")}: {summary.phases.night ?? t("notInRange")}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section className="results-section card">
-        <h2>{t("results")}</h2>
-        <ResultTable rows={sortedRows} t={t} />
-      </section>
+      <ResultDataGrid
+        rows={rows}
+        focusedUtc={focusedUtc}
+        onCsv={() => handleTextDownload("csv")}
+        onXlsx={handleXlsxDownload}
+        onTxt={() => handleTextDownload("txt")}
+        onMarkdown={() => handleTextDownload("md")}
+        t={t}
+      />
 
       <footer className="footer-note">{t("accuracyNotice")}</footer>
-    </main>
+    </TerminalAppFrame>
   );
 }

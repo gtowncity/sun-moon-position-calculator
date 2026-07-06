@@ -8,6 +8,7 @@ import {
   imagingModeThreshold,
   type SolarNightSample
 } from "../src/domain/insights/effectiveImagingWindow";
+import { calculateMultiNightPlan } from "../src/domain/insights/multiNightPlanner";
 
 function sample(localDate: string, localTime: string, altitude: number): SolarNightSample {
   return {
@@ -92,7 +93,9 @@ describe("effective imaging window", () => {
       utcTime: entry.utcTime.replace("2026-07-05", "2026-07-06").replace("2026-07-06", "2026-07-07")
     }));
     const summaries = calculateMultiNightSummaries([...nightWithAstronomicalDarkness(), ...secondNight], "UTC", "strict");
+    const planned = calculateMultiNightPlan([...nightWithAstronomicalDarkness(), ...secondNight], "UTC", "strict");
     expect(summaries).toHaveLength(2);
+    expect(planned).toHaveLength(2);
     expect(summaries[0].nightStartDate).toBe("2026-07-05");
     expect(summaries[1].nightStartDate).toBe("2026-07-06");
   });

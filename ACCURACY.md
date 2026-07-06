@@ -64,3 +64,9 @@ Twilight milestones and effective imaging windows are interpolated between adjac
 ## Known Deviations
 
 Real JPL/NREL fixtures are not yet committed. JSON fixture files currently contain `TODO_REFERENCE_VALUE` placeholders and are not treated as passing astronomical reference tests.
+
+## UI Presentation Limits
+
+The amber CRT dashboard is a planning interface. Large labels such as `[GOOD]`, `[LIMITED]` and `[NO ASTRO NIGHT]` summarize the selected samples; they are not claims of NREL-SPA accuracy or JPL-identical output.
+
+The oscilloscope chart, radar compass, Moon interference report and quality diagnostics are derived from the same runtime result rows shown in the data grid. They do not account for terrain, buildings, mountains, clouds, haze, seeing, local light pollution or target-specific Moon separation.

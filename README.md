@@ -2,6 +2,8 @@
 
 A local Vite + React + TypeScript web tool for calculating topocentric Sun and Moon positions for an observer location, IANA time zone and selectable time range.
 
+The app analyzes a concrete astro night, for example `05.07.2026 -> 06.07.2026`, calculates the effective imaging window based on solar-altitude thresholds, and presents results in a Win95-inspired amber CRT terminal interface.
+
 ## Features
 
 - Sun, Moon or both bodies in one calculation
@@ -13,11 +15,14 @@ A local Vite + React + TypeScript web tool for calculating topocentric Sun and M
 - Single instant, start/end and start/duration calculation modes
 - Astro-night mode: select an evening date and analyze the night into the following morning
 - Effective imaging-window calculation from solar altitude thresholds (-18, -15 and -12 degrees)
-- Large interactive night timeline, altitude curve, sky compass and multi-night planner
+- Win95 amber CRT terminal shell with optional CRT FX toggle
+- Compact control panel separated from the analysis results
+- Large interactive night timeline, oscilloscope-style altitude curve, radar sky compass and multi-night planner
+- Collapsible detail report and retro result data grid
 - UTC-based interval generation with row limits
 - Refraction modes: none, standard and custom pressure/temperature
 - Result table with local time, UTC time, true-north azimuth, geometric/apparent altitude and zenith angle
-- Sun/Moon rise, set and transit event cards
+- Sun/Moon rise, set and transit event log
 - CSV, XLSX, TXT and Markdown export with metadata
 - German and English UI through JSON i18n files
 - Optional local saved locations in browser `localStorage`
@@ -69,8 +74,22 @@ Runtime calculations currently use `astronomy-engine` for Sun and Moon positions
 
 See `ACCURACY.md`, `ALGORITHMS.md` and `VALIDATION.md` for details.
 
+The amber CRT UI does not change the accuracy stance. It summarizes the runtime rows into practical planning views and does not claim JPL-identical values or NREL-SPA-level precision.
+
 ## Privacy Notice
 
 The app has no backend, no analytics, no cookies for tracking and no API keys. Browser geolocation is requested only after a click. Place/postal-code search sends the search term to Open-Meteo Geocoding. Saved locations are stored only if the user explicitly saves them locally.
 
+If Open-Meteo geocoding fails in a browser, possible causes include network connectivity, DNS, browser extensions, local firewall rules or blocked third-party domains.
+
 See `PRIVACY.md`.
+
+## Design Review
+
+Generate final design screenshots with:
+
+```bash
+npm run screenshot:design
+```
+
+The current redesign stores review artifacts in `design-review/baseline-current/`, `design-review/restructure-round-01/`, `design-review/amber-crt-round-02/` and `design-review/final/`.

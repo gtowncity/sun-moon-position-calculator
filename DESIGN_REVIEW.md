@@ -1,46 +1,98 @@
 # DESIGN_REVIEW.md
 
-## Round 02 Redesign
+## Baseline Current
 
 Screenshots:
 
-- `design-review/round-02-redesign/desktop-full.png`
-- `design-review/round-02-redesign/desktop-above-fold.png`
-- `design-review/round-02-redesign/mobile-full.png`
+- `design-review/baseline-current/desktop-full.png`
+- `design-review/baseline-current/desktop-above-fold.png`
+- `design-review/baseline-current/mobile-full.png`
 
 Findings:
 
-- The app now uses the desktop width much better than the previous narrow prototype.
-- The first viewport clearly states the selected night and whether an effective imaging window exists.
-- The "Night analysis" panel makes sunset, twilight boundaries and sunrise visible without reading the raw table.
-- Weakness found during review: the hero originally left unused space under the left column because the night summary was taller. The final CSS pass makes the hero fill that row.
-- Weakness found during review: score cards were too prominent above the timeline. They were moved behind the main night-planning modules.
+1. Information architecture was not clear enough. The app opened as a modern dashboard with multiple equal-weight cards rather than a single application frame.
+2. Inputs and results were mixed. Analysis mode, hero, location/time controls, export actions, result summaries and raw table were separated into several unrelated blocks.
+3. The hero was visually large but did not feel like the central terminal readout for night span, effective window, usable time and status.
+4. The timeline was present but still read as a row of sample boxes, not the main planning instrument.
+5. The altitude chart and compass were useful but did not look like instruments.
+6. Moon interference and quality scores were scattered and too small.
+7. Multi-night planning was card-based and less comparable than a terminal database table.
+8. The table looked like a normal data dump rather than a deliberate data grid with attached export controls.
+9. CSS contained several layered override blocks and layout hacks, including broad `nth-child` rules.
 
-## Round 03 Final
+Action:
+
+- Replace card-soup IA with terminal app frame, compact control panel, main analysis, instrument cluster, planner, detail report and data grid.
+- Build an amber CRT visual system from reusable retro components.
+- Move export controls to the data grid.
+- Make details subordinate and collapsible.
+
+## Restructure Round 01
 
 Screenshots:
 
-- `design-review/round-03-final/desktop-full.png`
-- `design-review/round-03-final/desktop-above-fold.png`
-- `design-review/round-03-final/mobile-full.png`
-- `design-review/round-03-final/night-mode-2026-07-05.png`
-- `design-review/round-03-final/multiday-7-days.png`
+- `design-review/restructure-round-01/desktop-full.png`
+- `design-review/restructure-round-01/desktop-above-fold.png`
+- `design-review/restructure-round-01/mobile-full.png`
+- `design-review/restructure-round-01/one-night-2026-07-05.png`
+
+Findings:
+
+1. The new app-frame direction was correct: titlebar, menu, statusbar and terminal panels made the page feel like an application.
+2. Problem: the control panel overflowed horizontally and pushed content into a 10,000px-wide layout due grid min-content behavior.
+3. Problem: because of that overflow, the first viewport still failed to show the intended compact control panel and dominant analysis in a balanced way.
+4. The amber CRT theme was recognizable, but the structure needed a layout fix before final judgment.
+
+Action:
+
+- Added `min-width: 0`, `max-width: 100%` and overflow constraints to the terminal shell, control panel, tab grid and control grid.
+- Replaced fragile span behavior with explicit control module classes.
+
+## Amber CRT Round 02
+
+Screenshots:
+
+- `design-review/amber-crt-round-02/desktop-full.png`
+- `design-review/amber-crt-round-02/desktop-above-fold.png`
+- `design-review/amber-crt-round-02/mobile-full.png`
+- `design-review/amber-crt-round-02/one-night-2026-07-05.png`
+- `design-review/amber-crt-round-02/multiday-7-nights.png`
 
 Review:
 
-1. Professional appearance: improved. The app reads as an astro planning dashboard instead of a raw calculator.
-2. Effective imaging time: improved. The hero shows the effective window or an explicit "no effective imaging window" state.
-3. Night identity: improved. The UI shows the night from the selected date to the following date.
-4. Astronomical night: improved. The night analysis panel exposes the -18 deg phase and its duration.
-5. Timeline size: improved. The timeline is a large interactive planning element with twilight phase coloring.
-6. Charts: improved. The altitude chart includes 0, -6, -12 and -18 deg reference lines and an effective-window band when available.
-7. Compass: improved. The compass is larger and shows altitude labels, with below-horizon bodies dimmed.
-8. Mobile: acceptable after responsive stacking, but still dense because the app contains many controls.
-9. Table dominance: improved. The raw result table remains lower in the page.
-10. Interactivity: improved. Date, mode, range, timeline, chart hover/click and multi-night cards update the view.
+1. Information architecture is now clear: terminal frame, statusbar, control panel, main analysis, instruments, planner, detail report and data grid are distinct.
+2. Inputs and results are separated. The control panel sits at the top; raw exports live with the data grid.
+3. Hero dominance improved. The selected night and effective-window state are immediately visible.
+4. Timeline is larger and placed directly under the main analysis.
+5. Instruments now read as instruments: amber oscilloscope chart, radar compass and terminal Moon report.
+6. Multi-night planner is comparable as a terminal table.
+7. Detail report is collapsible and no longer competes with the main analysis.
+8. Mobile is usable, but the compact control panel still created implicit columns for some fields.
 
-Remaining design limits:
+Action:
 
-- The summer example for Berlin on 2026-07-05 has no real astronomical night, so the hero intentionally shows a negative planning result.
-- The night boundary times are interpolated from the configured interval samples. Smaller intervals improve visual precision.
-- The Moon interference model does not yet include angular distance to a selected deep-sky target.
+- Normalized desktop control modules into six equal modules.
+- Forced all control modules to one column on mobile.
+- Removed duplicate threshold text in the hero.
+
+## Final Review Criteria
+
+Final screenshots are generated by `npm run screenshot:design` into `design-review/final/`.
+
+Expected final state:
+
+- App opens as `SUN/MOON ASTRO TERMINAL v0.9`.
+- Statusbar shows location, timezone, mode, night, rows and CRT FX state.
+- Compact control panel is separated from results.
+- Hero shows concrete night span and effective imaging window status.
+- Timeline, twilight table and instruments are visible as a coherent night-analysis flow.
+- Detail report is collapsible.
+- Data grid includes CSV, XLSX, TXT and Markdown export controls.
+- CRT FX is available and toggleable.
+
+Remaining limits:
+
+- The Berlin/Geiselhöring summer examples can legitimately show no true astronomical night.
+- Twilight boundaries are interpolated from interval samples.
+- Moon interference does not include angular distance to a selected target.
+- The amber CRT theme is intentionally monochrome; status text prevents color-only interpretation.

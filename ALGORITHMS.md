@@ -93,3 +93,18 @@ Selectable imaging modes:
 - bright target/test: Sun <= -12 deg
 
 The night planner uses interval samples generated from real `Temporal.Instant` values. Twilight boundary times are linearly interpolated between adjacent computed Sun-altitude samples. This is a UI planning summary; smaller intervals produce more precise boundary estimates.
+
+## Quality Diagnostics
+
+The terminal dashboard includes a `Quality Diagnostics` block. These diagnostics are UI guidance, not independent astronomical measurements:
+
+- Darkness uses the existing dashboard darkness score derived from geometric Sun altitude.
+- Moon impact inverts the average Moon interference score, which is based on Moon altitude and illumination.
+- Usability uses the existing combined score from darkness minus Moon interference.
+- Window scores the selected effective imaging-window duration against a practical four-hour reference window.
+
+The diagnostic bars are deliberately labeled and documented as planning aids. They do not include weather, seeing, transparency, local horizon, target altitude, target separation from the Moon or artificial light pollution.
+
+## Terminal Interface
+
+The Win95 amber CRT interface changes presentation only. It does not introduce a new solar or lunar formula. The terminal hero, timeline, oscilloscope chart, radar compass, multi-night database and data grid all render values derived from the existing Astronomy Engine runtime rows and insight summaries.
