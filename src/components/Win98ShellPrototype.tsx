@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { buildCalculationRequest, defaultCalculationFormState, type CalculationFormState, type CalculationRequest } from "../domain/calculationRequest";
 import "./Win98ShellPrototype.css";
+import "./Win98RequestDebug.css";
 
 const twilightRows = [["21:29","Sonnenuntergang"],["22:17","Buergerliche Daemmerung Ende"],["23:13","Nautische Daemmerung Ende"],["--:--","Astronomische Nacht nicht erreicht"],["04:05","Buergerliche Daemmerung Beginn"],["04:52","Sonnenaufgang"]];
 const eventRows = [["04:52","Sonne","Aufgang"],["06:27","Mond","Transit"],["13:11","Sonne","Transit"],["21:29","Sonne","Untergang"],["22:17","Sonne","Buergerliche Daemmerung Ende"],["23:13","Sonne","Nautische Daemmerung Ende"]];
