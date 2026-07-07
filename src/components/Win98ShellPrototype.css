@@ -6,6 +6,7 @@
   --w98-mid: #808080;
   --w98-blue: #000080;
   --w98-blue2: #1084d0;
+  --w98-warn: #ffffe1;
 }
 
 * { box-sizing: border-box; }
@@ -17,7 +18,7 @@ body { margin: 0; }
   padding: 10px;
   background: var(--w98-desktop);
   color: #000;
-  font-family: Tahoma, Arial, sans-serif;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
   font-size: 12px;
 }
 
@@ -36,11 +37,21 @@ body { margin: 0; }
   cursor: default;
 }
 
+.win98-desktop button:hover { background: #d0d0d0; }
+.win98-desktop button:focus { outline: 1px dotted #000; outline-offset: -4px; }
 .win98-desktop button:active,
 .win98-desktop button.active {
   border-color: var(--w98-dark) var(--w98-light) var(--w98-light) var(--w98-dark);
   background: #b8b8b8;
   box-shadow: inset 1px 1px 0 #000;
+}
+
+.win98-default-button {
+  min-width: 164px;
+  min-height: 36px;
+  border-width: 2px;
+  box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff, 1px 1px 0 #000;
+  font-weight: 700;
 }
 
 .win98-app-window {
@@ -66,15 +77,36 @@ body { margin: 0; }
 
 .win98-titlebar-left { display: flex; align-items: center; gap: 6px; }
 .win98-app-icon {
-  display: inline-grid;
+  position: relative;
+  display: inline-block;
   width: 16px;
   height: 16px;
-  place-items: center;
   border: 1px solid #fff;
   background: var(--w98-gray);
-  color: #000;
-  font-size: 11px;
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 var(--w98-dark);
 }
+.win98-app-icon::before {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 8px;
+  height: 6px;
+  border: 1px solid #000;
+  background: var(--w98-blue);
+  content: "";
+}
+.win98-app-icon::after {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffd34a;
+  box-shadow: -5px -1px 0 0 #f5f5f5;
+  content: "";
+}
+
 .win98-window-controls { display: flex; gap: 2px; }
 .win98-window-controls button { width: 18px; height: 18px; min-height: 18px; padding: 0; font-weight: 700; line-height: 1; }
 
@@ -87,7 +119,9 @@ body { margin: 0; }
   background: var(--w98-gray);
   padding: 0 8px;
 }
-.win98-menubar span:first-letter { text-decoration: underline; }
+.win98-menubar span { padding: 2px 4px; }
+.win98-menubar span:hover { border: 1px solid; border-color: #fff #808080 #808080 #fff; padding: 1px 3px; }
+.win98-menubar u { text-underline-offset: 2px; }
 
 .win98-toolbar {
   display: flex;
@@ -100,12 +134,13 @@ body { margin: 0; }
   padding: 4px 6px;
 }
 .win98-toolbar button { display: flex; align-items: center; gap: 5px; }
-.win98-primary-button { font-weight: 700; }
 .win98-toolbar i { height: 24px; margin: 0 5px; border-left: 1px solid var(--w98-mid); border-right: 1px solid #fff; }
-.win98-toolbar-icon { display: inline-block; width: 14px; height: 14px; border: 1px solid var(--w98-dark); background: #fff; }
+.win98-toolbar-icon { position: relative; display: inline-block; width: 14px; height: 14px; border: 1px solid var(--w98-dark); background: #fff; }
+.win98-icon-doc::after { position: absolute; right: 1px; top: 1px; width: 5px; height: 5px; background: #bfe7ff; content: ""; }
 .win98-icon-pin, .win98-icon-clock { border-radius: 50%; }
 .win98-icon-pin { background: #ff4040; }
 .win98-icon-clock { background: #9dd7ff; }
+.win98-icon-play { background: linear-gradient(90deg, #111 0 45%, transparent 45%); }
 .win98-icon-disk { background: linear-gradient(#3151b7 0 36%, #fff 36% 62%, #808080 62% 100%); }
 .win98-icon-help { background: #ffff99; }
 .win98-icon-help::after { content: "?"; font-weight: 700; }
@@ -136,13 +171,14 @@ body { margin: 0; }
   display: grid;
   min-height: 0;
   grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 7px;
+  gap: 8px;
   overflow: hidden;
   background: #bfbfbf;
   padding: 7px;
 }
-.win98-control-strip { display: grid; grid-template-columns: 1.2fr 1fr .9fr 1fr 1fr; gap: 7px; }
-.win98-group { min-width: 0; margin: 0; border: 2px groove #fff; background: var(--w98-gray); padding: 6px 7px 7px; }
+
+.win98-control-strip { display: grid; grid-template-columns: 1.05fr .95fr .9fr .85fr 185px; gap: 7px; }
+.win98-group, .win98-action-panel { min-width: 0; margin: 0; border: 2px groove #fff; background: var(--w98-gray); padding: 6px 7px 7px; }
 .win98-group legend { padding: 0 4px; font-weight: 700; }
 .win98-field-grid { display: grid; gap: 5px; }
 .win98-two-columns { grid-template-columns: 1fr 1fr; }
@@ -157,43 +193,62 @@ body { margin: 0; }
   padding: 2px 4px;
 }
 .win98-desktop input[type="radio"] { width: 13px; height: 13px; margin: 0 5px 0 0; padding: 0; }
-.win98-radio-list { display: grid; gap: 3px; margin-bottom: 6px; }
+.win98-radio-list { display: grid; gap: 4px; margin-bottom: 7px; }
 .win98-radio-list label { display: flex; align-items: center; }
 .win98-button-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
 .win98-group p { margin: 6px 0 0; color: #333; }
+.win98-action-panel { display: grid; align-content: space-between; gap: 8px; }
+.win98-action-title { font-weight: 700; }
+.win98-options-strip { border: 1px solid; border-color: #808080 #fff #fff #808080; background: #e7e7e7; padding: 5px; line-height: 1.35; }
 
-.win98-summary-zone { display: grid; grid-template-columns: 1fr 1fr 1.15fr; gap: 8px; }
+.win98-summary-zone { display: grid; grid-template-columns: 1.2fr 1.2fr .8fr; gap: 8px; }
 .win98-panel { min-width: 0; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; }
 .win98-panel > header { display: flex; min-height: 24px; align-items: center; gap: 6px; border-bottom: 1px solid var(--w98-mid); background: #d8d8d8; padding: 3px 6px; }
-.win98-summary-card { padding-bottom: 6px; }
-.win98-readout { padding: 9px 10px 5px; font-size: 30px; font-weight: 700; line-height: 1; }
-.win98-summary-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; margin: 0; padding: 0 10px; }
+.win98-summary-card { min-height: 146px; padding-bottom: 10px; }
+.win98-metric-label { padding: 10px 12px 0; color: #333; font-weight: 700; }
+.win98-readout { padding: 1px 10px 4px; font-size: 38px; font-weight: 700; line-height: 1; }
+.win98-substatus { display: inline-block; margin: -1px 10px 6px; border: 1px solid #808080; background: #eee; padding: 1px 6px; font-weight: 700; }
+.win98-summary-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; margin: 0; padding: 0 10px; }
 .win98-summary-card dl div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted #aaa; }
 .win98-summary-card dd { margin: 0; font-weight: 700; }
-.win98-notes-panel ul { margin: 8px 12px 8px 22px; padding: 0; }
-.win98-notes-panel li { margin: 0 0 5px; }
+
+.win98-warning-panel { display: grid; grid-template-columns: 24px 1fr; gap: 8px; min-height: 146px; background: var(--w98-warn); padding: 12px; }
+.win98-warning-icon { display: inline-grid; width: 22px; height: 22px; place-items: center; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: #ffd34a; font-weight: 700; }
+.win98-warning-panel h3 { margin: 0 0 5px; font-size: 13px; }
+.win98-warning-panel p { margin: 0 0 7px; line-height: 1.35; }
+.win98-warning-panel button { min-width: 74px; }
 
 .win98-tabs-area { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
-.win98-tabs { display: flex; align-items: flex-end; gap: 2px; padding-left: 6px; }
-.win98-tabs button { position: relative; top: 2px; min-height: 25px; border-bottom-color: var(--w98-gray); box-shadow: none; }
-.win98-tabs button.active { border-bottom-color: #fff; background: #fff; font-weight: 700; }
+.win98-tabs { display: flex; align-items: flex-end; gap: 2px; overflow-x: auto; padding-left: 6px; }
+.win98-tabs button { position: relative; top: 2px; min-height: 26px; white-space: nowrap; border-bottom-color: var(--w98-gray); box-shadow: none; }
+.win98-tabs button.active { top: 0; min-height: 28px; border-bottom-color: #fff; background: #fff; font-weight: 700; }
 .win98-tab-page { min-height: 0; overflow: auto; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; padding: 7px; }
-.win98-tab-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.win98-tab-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .win98-night-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px; border: 1px solid var(--w98-mid); background: #efefef; padding: 8px; }
 .win98-night-banner span { font-size: 18px; font-weight: 700; }
 .win98-twilight-list { display: grid; margin: 8px; border-top: 1px solid #ddd; }
-.win98-twilight-list div { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid #ddd; padding: 4px 6px; }
-.win98-table-panel header { justify-content: space-between; }
+.win98-twilight-list div { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid #ddd; padding: 5px 6px; }
+.win98-table-wrap { overflow: auto; }
 .win98-table { width: 100%; border-collapse: collapse; background: #fff; }
-.win98-table th { border: 1px solid var(--w98-mid); background: var(--w98-gray); padding: 4px 6px; text-align: left; }
+.win98-table th { border: 2px solid; border-color: #fff #808080 #808080 #fff; background: var(--w98-gray); padding: 5px 6px; text-align: left; }
 .win98-table td { border: 1px solid #d0d0d0; padding: 4px 6px; }
 .win98-table tr:nth-child(even) td { background: #f4f4f4; }
-.win98-statusbar { display: grid; grid-template-columns: auto auto auto auto 1fr; gap: 2px; border-top: 1px solid #fff; background: var(--w98-gray); padding: 3px; font-size: 11px; }
+
+.win98-statusbar { display: grid; grid-template-columns: auto auto auto auto auto 1fr; gap: 2px; border-top: 1px solid #fff; background: var(--w98-gray); padding: 3px; font-size: 11px; }
 .win98-statusbar span { display: block; min-height: 20px; overflow: hidden; border: 1px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); padding: 2px 6px; text-overflow: ellipsis; white-space: nowrap; }
 
-@media (max-width: 850px) {
-  .win98-app-window { height: auto; min-height: calc(100vh - 20px); overflow: visible; }
+@media (max-width: 1100px) {
+  .win98-control-strip { grid-template-columns: 1fr 1fr; }
+  .win98-summary-zone { grid-template-columns: 1fr 1fr; }
+  .win98-warning-panel { grid-column: 1 / -1; }
+  .win98-statusbar { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+@media (max-width: 760px) {
+  .win98-desktop { padding: 4px; }
+  .win98-app-window { height: auto; min-height: calc(100vh - 8px); overflow: visible; }
   .win98-content, .win98-tab-page { overflow: visible; }
   .win98-control-strip, .win98-summary-zone, .win98-tab-layout { grid-template-columns: 1fr; }
   .win98-statusbar { grid-template-columns: 1fr 1fr; }
+  .win98-toolbar, .win98-menubar { overflow-x: auto; }
 }
