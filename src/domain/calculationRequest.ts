@@ -15,6 +15,7 @@ export interface CalculationRequest {
   time: {
     timezoneIana: string;
     startLocal: string;
+    endLocal?: string;
     mode: "one-night" | "single" | "range" | "duration";
     intervalMinutes: number;
   };
@@ -33,6 +34,8 @@ export interface CalculationFormState {
   observerSource: ObserverSource;
   date: string;
   time: string;
+  endDate: string;
+  endTime: string;
   timezoneIana: string;
   target: CalculationTarget;
   mode: "one-night" | "single" | "range" | "duration";
@@ -50,6 +53,8 @@ export const defaultCalculationFormState: CalculationFormState = {
   observerSource: "manual",
   date: "2026-07-07",
   time: "16:00",
+  endDate: "2026-07-08",
+  endTime: "10:00",
   timezoneIana: "Europe/Berlin",
   target: "both",
   mode: "one-night",
@@ -77,6 +82,7 @@ export function buildCalculationRequest(form: CalculationFormState): Calculation
     time: {
       timezoneIana: form.timezoneIana,
       startLocal: `${form.date}T${form.time}`,
+      endLocal: `${form.endDate}T${form.endTime}`,
       mode: form.mode,
       intervalMinutes: Math.max(1, toNumber(form.intervalMinutes, 10))
     },
