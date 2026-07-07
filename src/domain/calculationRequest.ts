@@ -11,6 +11,7 @@ export interface CalculationRequest {
     longitudeDeg: number;
     elevationMeters?: number;
     source: ObserverSource;
+    label?: string;
   };
   time: {
     timezoneIana: string;
@@ -28,6 +29,8 @@ export interface CalculationRequest {
 }
 
 export interface CalculationFormState {
+  locationQuery: string;
+  locationLabel: string;
   latitudeDeg: string;
   longitudeDeg: string;
   elevationMeters: string;
@@ -47,6 +50,8 @@ export interface CalculationFormState {
 }
 
 export const defaultCalculationFormState: CalculationFormState = {
+  locationQuery: "Berlin",
+  locationLabel: "Berlin",
   latitudeDeg: "52.520000",
   longitudeDeg: "13.405000",
   elevationMeters: "34",
@@ -77,7 +82,8 @@ export function buildCalculationRequest(form: CalculationFormState): Calculation
       latitudeDeg: toNumber(form.latitudeDeg),
       longitudeDeg: toNumber(form.longitudeDeg),
       elevationMeters: toNumber(form.elevationMeters),
-      source: form.observerSource
+      source: form.observerSource,
+      label: form.locationLabel
     },
     time: {
       timezoneIana: form.timezoneIana,
