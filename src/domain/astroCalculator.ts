@@ -41,7 +41,7 @@ export const formatDate = (dateText: string) => {
 function calculateBody(body: Body, object: "Sonne" | "Mond", date: Date, observer: Observer): AstroPosition {
   const equ = Equator(body, date, observer, true, true);
   const apparent = Horizon(date, observer, equ.ra, equ.dec, "normal");
-  const geometric = Horizon(date, observer, equ.ra, equ.dec, null);
+  const geometric = Horizon(date, observer, equ.ra, equ.dec, undefined);
   const illum = object === "Mond" ? Illumination(Body.Moon, date) : null;
 
   return {
