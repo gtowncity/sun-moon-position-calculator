@@ -13,126 +13,28 @@
 html, body, #root { min-height: 100%; }
 body { margin: 0; }
 
-.win98-desktop {
-  min-height: 100vh;
-  padding: 10px;
-  background: var(--w98-desktop);
-  color: #000;
-  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
-  font-size: 12px;
-}
-
-.win98-desktop button,
-.win98-desktop input,
-.win98-desktop select { font: inherit; }
-
-.win98-desktop button {
-  min-height: 23px;
-  padding: 2px 9px;
-  border: 2px solid;
-  border-color: var(--w98-light) var(--w98-dark) var(--w98-dark) var(--w98-light);
-  background: var(--w98-gray);
-  color: #000;
-  box-shadow: 1px 1px 0 #000;
-  cursor: default;
-}
-
+.win98-desktop { min-height: 100vh; padding: 10px; background: var(--w98-desktop); color: #000; font-family: Tahoma, "MS Sans Serif", Arial, sans-serif; font-size: 12px; }
+.win98-desktop button, .win98-desktop input, .win98-desktop select { font: inherit; }
+.win98-desktop button { min-height: 23px; padding: 2px 9px; border: 2px solid; border-color: var(--w98-light) var(--w98-dark) var(--w98-dark) var(--w98-light); background: var(--w98-gray); color: #000; box-shadow: 1px 1px 0 #000; cursor: default; }
 .win98-desktop button:hover { background: #d0d0d0; }
 .win98-desktop button:focus { outline: 1px dotted #000; outline-offset: -4px; }
-.win98-desktop button:active,
-.win98-desktop button.active {
-  border-color: var(--w98-dark) var(--w98-light) var(--w98-light) var(--w98-dark);
-  background: #b8b8b8;
-  box-shadow: inset 1px 1px 0 #000;
-}
+.win98-desktop button:active, .win98-desktop button.active { border-color: var(--w98-dark) var(--w98-light) var(--w98-light) var(--w98-dark); background: #b8b8b8; box-shadow: inset 1px 1px 0 #000; }
+.win98-default-button { min-width: 190px; min-height: 38px; border-width: 2px; box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff, 1px 1px 0 #000; font-weight: 700; }
 
-.win98-default-button {
-  min-width: 164px;
-  min-height: 36px;
-  border-width: 2px;
-  box-shadow: inset -1px -1px 0 #000, inset 1px 1px 0 #fff, 1px 1px 0 #000;
-  font-weight: 700;
-}
-
-.win98-app-window {
-  display: grid;
-  height: calc(100vh - 20px);
-  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
-  overflow: hidden;
-  border: 2px solid;
-  border-color: var(--w98-light) var(--w98-dark) var(--w98-dark) var(--w98-light);
-  background: var(--w98-gray);
-  box-shadow: 1px 1px 0 #000;
-}
-
-.win98-titlebar {
-  display: flex;
-  height: 22px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 2px 3px 2px 4px;
-  background: linear-gradient(90deg, var(--w98-blue), var(--w98-blue2));
-  color: #fff;
-}
-
+.win98-app-window { display: grid; height: calc(100vh - 20px); grid-template-rows: auto auto auto auto minmax(0, 1fr) auto; overflow: hidden; border: 2px solid; border-color: var(--w98-light) var(--w98-dark) var(--w98-dark) var(--w98-light); background: var(--w98-gray); box-shadow: 1px 1px 0 #000; }
+.win98-titlebar { display: flex; height: 22px; align-items: center; justify-content: space-between; padding: 2px 3px 2px 4px; background: linear-gradient(90deg, var(--w98-blue), var(--w98-blue2)); color: #fff; }
 .win98-titlebar-left { display: flex; align-items: center; gap: 6px; }
-.win98-app-icon {
-  position: relative;
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 1px solid #fff;
-  background: var(--w98-gray);
-  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 var(--w98-dark);
-}
-.win98-app-icon::before {
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 8px;
-  height: 6px;
-  border: 1px solid #000;
-  background: var(--w98-blue);
-  content: "";
-}
-.win98-app-icon::after {
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #ffd34a;
-  box-shadow: -5px -1px 0 0 #f5f5f5;
-  content: "";
-}
-
+.win98-app-icon { position: relative; display: inline-block; width: 16px; height: 16px; border: 1px solid #fff; background: var(--w98-gray); box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 var(--w98-dark); }
+.win98-app-icon::before { position: absolute; left: 3px; top: 3px; width: 8px; height: 6px; border: 1px solid #000; background: var(--w98-blue); content: ""; }
+.win98-app-icon::after { position: absolute; right: 2px; bottom: 2px; width: 5px; height: 5px; border-radius: 50%; background: #ffd34a; box-shadow: -5px -1px 0 0 #f5f5f5; content: ""; }
 .win98-window-controls { display: flex; gap: 2px; }
 .win98-window-controls button { width: 18px; height: 18px; min-height: 18px; padding: 0; font-weight: 700; line-height: 1; }
 
-.win98-menubar {
-  display: flex;
-  height: 23px;
-  align-items: center;
-  gap: 18px;
-  border-bottom: 1px solid var(--w98-mid);
-  background: var(--w98-gray);
-  padding: 0 8px;
-}
+.win98-menubar { display: flex; height: 23px; align-items: center; gap: 18px; border-bottom: 1px solid var(--w98-mid); background: var(--w98-gray); padding: 0 8px; }
 .win98-menubar span { padding: 2px 4px; }
 .win98-menubar span:hover { border: 1px solid; border-color: #fff #808080 #808080 #fff; padding: 1px 3px; }
 .win98-menubar u { text-underline-offset: 2px; }
-
-.win98-toolbar {
-  display: flex;
-  min-height: 34px;
-  align-items: center;
-  gap: 4px;
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid var(--w98-mid);
-  background: var(--w98-gray);
-  padding: 4px 6px;
-}
+.win98-toolbar { display: flex; min-height: 34px; align-items: center; gap: 4px; border-top: 1px solid #fff; border-bottom: 1px solid var(--w98-mid); background: var(--w98-gray); padding: 4px 6px; }
 .win98-toolbar button { display: flex; align-items: center; gap: 5px; }
 .win98-toolbar i { height: 24px; margin: 0 5px; border-left: 1px solid var(--w98-mid); border-right: 1px solid #fff; }
 .win98-toolbar-icon { position: relative; display: inline-block; width: 14px; height: 14px; border: 1px solid var(--w98-dark); background: #fff; }
@@ -144,111 +46,63 @@ body { margin: 0; }
 .win98-icon-disk { background: linear-gradient(#3151b7 0 36%, #fff 36% 62%, #808080 62% 100%); }
 .win98-icon-help { background: #ffff99; }
 .win98-icon-help::after { content: "?"; font-weight: 700; }
+.win98-addressbar { display: grid; height: 27px; min-height: 27px; grid-template-columns: auto 1fr; align-items: center; gap: 6px; border-top: 1px solid #fff; border-bottom: 1px solid var(--w98-mid); padding: 3px 6px; }
+.win98-addressbar div { height: 21px; overflow: hidden; border: 2px solid; border-color: var(--w98-dark) #fff #fff var(--w98-dark); background: #fff; padding: 2px 6px; text-overflow: ellipsis; white-space: nowrap; }
 
-.win98-addressbar {
-  display: grid;
-  height: 27px;
-  min-height: 27px;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 6px;
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid var(--w98-mid);
-  padding: 3px 6px;
-}
-.win98-addressbar div {
-  height: 21px;
-  overflow: hidden;
-  border: 2px solid;
-  border-color: var(--w98-dark) #fff #fff var(--w98-dark);
-  background: #fff;
-  padding: 2px 6px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.win98-content {
-  display: grid;
-  min-height: 0;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 8px;
-  overflow: hidden;
-  background: #bfbfbf;
-  padding: 7px;
-}
-
-.win98-control-strip { display: grid; grid-template-columns: 1.05fr .95fr .9fr .85fr 185px; gap: 7px; }
-.win98-group, .win98-action-panel { min-width: 0; margin: 0; border: 2px groove #fff; background: var(--w98-gray); padding: 6px 7px 7px; }
+.win98-content { display: grid; min-height: 0; grid-template-rows: auto auto minmax(0, 1fr); gap: 7px; overflow: hidden; background: #bfbfbf; padding: 7px; }
+.win98-control-strip { display: grid; grid-template-columns: 1fr .92fr .78fr .74fr 215px; gap: 7px; }
+.win98-group, .win98-action-panel { min-width: 0; margin: 0; border: 2px groove #fff; background: var(--w98-gray); padding: 5px 7px 6px; }
 .win98-group legend { padding: 0 4px; font-weight: 700; }
-.win98-field-grid { display: grid; gap: 5px; }
+.win98-field-grid { display: grid; gap: 4px; }
 .win98-two-columns { grid-template-columns: 1fr 1fr; }
-.win98-field-grid label { display: grid; gap: 2px; }
-.win98-desktop input, .win98-desktop select {
-  width: 100%;
-  height: 23px;
-  border: 2px solid;
-  border-color: var(--w98-dark) #fff #fff var(--w98-dark);
-  background: #fff;
-  color: #000;
-  padding: 2px 4px;
-}
+.win98-field-grid label { display: grid; gap: 1px; }
+.win98-desktop input, .win98-desktop select { width: 100%; height: 22px; border: 2px solid; border-color: var(--w98-dark) #fff #fff var(--w98-dark); background: #fff; color: #000; padding: 2px 4px; }
 .win98-desktop input[type="radio"] { width: 13px; height: 13px; margin: 0 5px 0 0; padding: 0; }
-.win98-radio-list { display: grid; gap: 4px; margin-bottom: 7px; }
+.win98-radio-list { display: grid; gap: 3px; margin-bottom: 5px; }
 .win98-radio-list label { display: flex; align-items: center; }
-.win98-button-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
-.win98-group p { margin: 6px 0 0; color: #333; }
-.win98-action-panel { display: grid; align-content: space-between; gap: 8px; }
+.win98-button-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.win98-group p { margin: 5px 0 0; color: #333; }
+.win98-action-panel { display: grid; align-content: space-between; gap: 7px; }
 .win98-action-title { font-weight: 700; }
-.win98-options-strip { border: 1px solid; border-color: #808080 #fff #fff #808080; background: #e7e7e7; padding: 5px; line-height: 1.35; }
+.win98-options-strip { border: 1px solid; border-color: #808080 #fff #fff #808080; background: #e7e7e7; padding: 5px; line-height: 1.3; }
 
-.win98-summary-zone { display: grid; grid-template-columns: 1.2fr 1.2fr .8fr; gap: 8px; }
+.win98-summary-zone { display: grid; grid-template-columns: 1.28fr 1.28fr .56fr; gap: 8px; }
 .win98-panel { min-width: 0; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; }
-.win98-panel > header { display: flex; min-height: 24px; align-items: center; gap: 6px; border-bottom: 1px solid var(--w98-mid); background: #d8d8d8; padding: 3px 6px; }
-.win98-summary-card { min-height: 146px; padding-bottom: 10px; }
-.win98-metric-label { padding: 10px 12px 0; color: #333; font-weight: 700; }
-.win98-readout { padding: 1px 10px 4px; font-size: 38px; font-weight: 700; line-height: 1; }
-.win98-substatus { display: inline-block; margin: -1px 10px 6px; border: 1px solid #808080; background: #eee; padding: 1px 6px; font-weight: 700; }
-.win98-summary-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; margin: 0; padding: 0 10px; }
+.win98-panel > header { display: flex; min-height: 24px; align-items: center; justify-content: space-between; gap: 6px; border-bottom: 1px solid var(--w98-mid); background: #d8d8d8; padding: 3px 6px; }
+.win98-summary-card { min-height: 152px; padding-bottom: 8px; }
+.win98-metric-label { padding: 9px 12px 0; color: #333; font-weight: 700; }
+.win98-readout { padding: 0 10px 5px; font-size: 34px; font-weight: 700; line-height: 1; }
+.win98-substatus { display: inline-block; margin: -1px 10px 5px; border: 1px solid #808080; background: #eee; padding: 1px 6px; font-weight: 700; }
+.win98-summary-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; margin: 0; padding: 0 10px; }
 .win98-summary-card dl div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted #aaa; }
 .win98-summary-card dd { margin: 0; font-weight: 700; }
-
-.win98-warning-panel { display: grid; grid-template-columns: 24px 1fr; gap: 8px; min-height: 146px; background: var(--w98-warn); padding: 12px; }
-.win98-warning-icon { display: inline-grid; width: 22px; height: 22px; place-items: center; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: #ffd34a; font-weight: 700; }
-.win98-warning-panel h3 { margin: 0 0 5px; font-size: 13px; }
-.win98-warning-panel p { margin: 0 0 7px; line-height: 1.35; }
-.win98-warning-panel button { min-width: 74px; }
+.win98-warning-panel { display: grid; grid-template-columns: 22px 1fr; gap: 7px; min-height: 126px; align-self: stretch; background: var(--w98-warn); padding: 10px; }
+.win98-warning-icon { display: inline-grid; width: 20px; height: 20px; place-items: center; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: #ffd34a; font-weight: 700; }
+.win98-warning-panel h3 { margin: 0 0 4px; font-size: 12px; }
+.win98-warning-panel p { margin: 0 0 6px; line-height: 1.3; }
+.win98-warning-panel button { min-width: 64px; padding: 1px 7px; }
 
 .win98-tabs-area { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
 .win98-tabs { display: flex; align-items: flex-end; gap: 2px; overflow-x: auto; padding-left: 6px; }
 .win98-tabs button { position: relative; top: 2px; min-height: 26px; white-space: nowrap; border-bottom-color: var(--w98-gray); box-shadow: none; }
 .win98-tabs button.active { top: 0; min-height: 28px; border-bottom-color: #fff; background: #fff; font-weight: 700; }
-.win98-tab-page { min-height: 0; overflow: auto; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; padding: 7px; }
+.win98-tab-page { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr); gap: 8px; overflow: auto; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; padding: 7px; }
 .win98-tab-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .win98-night-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px; border: 1px solid var(--w98-mid); background: #efefef; padding: 8px; }
 .win98-night-banner span { font-size: 18px; font-weight: 700; }
 .win98-twilight-list { display: grid; margin: 8px; border-top: 1px solid #ddd; }
-.win98-twilight-list div { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid #ddd; padding: 5px 6px; }
+.win98-twilight-list div { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid #ddd; padding: 4px 6px; }
 .win98-table-wrap { overflow: auto; }
+.win98-preview-panel { min-height: 210px; }
+.win98-preview-panel header span { font-weight: 400; }
+.win98-preview-panel .win98-table-wrap { max-height: 240px; }
 .win98-table { width: 100%; border-collapse: collapse; background: #fff; }
-.win98-table th { border: 2px solid; border-color: #fff #808080 #808080 #fff; background: var(--w98-gray); padding: 5px 6px; text-align: left; }
-.win98-table td { border: 1px solid #d0d0d0; padding: 4px 6px; }
+.win98-table th { border: 2px solid; border-color: #fff #808080 #808080 #fff; background: var(--w98-gray); padding: 4px 6px; text-align: left; }
+.win98-table td { border: 1px solid #d0d0d0; padding: 3px 6px; }
 .win98-table tr:nth-child(even) td { background: #f4f4f4; }
-
 .win98-statusbar { display: grid; grid-template-columns: auto auto auto auto auto 1fr; gap: 2px; border-top: 1px solid #fff; background: var(--w98-gray); padding: 3px; font-size: 11px; }
 .win98-statusbar span { display: block; min-height: 20px; overflow: hidden; border: 1px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); padding: 2px 6px; text-overflow: ellipsis; white-space: nowrap; }
 
-@media (max-width: 1100px) {
-  .win98-control-strip { grid-template-columns: 1fr 1fr; }
-  .win98-summary-zone { grid-template-columns: 1fr 1fr; }
-  .win98-warning-panel { grid-column: 1 / -1; }
-  .win98-statusbar { grid-template-columns: 1fr 1fr 1fr; }
-}
-
-@media (max-width: 760px) {
-  .win98-desktop { padding: 4px; }
-  .win98-app-window { height: auto; min-height: calc(100vh - 8px); overflow: visible; }
-  .win98-content, .win98-tab-page { overflow: visible; }
-  .win98-control-strip, .win98-summary-zone, .win98-tab-layout { grid-template-columns: 1fr; }
-  .win98-statusbar { grid-template-columns: 1fr 1fr; }
-  .win98-toolbar, .win98-menubar { overflow-x: auto; }
-}
+@media (min-width: 1500px) { .win98-summary-zone { grid-template-columns: 1.35fr 1.35fr .5fr; } .win98-preview-panel { min-height: 240px; } }
+@media (max-width: 1200px) { .win98-control-strip { grid-template-columns: 1fr 1fr; } .win98-action-panel { grid-column: span 2; } .win98-summary-zone { grid-template-columns: 1fr 1fr; } .win98-warning-panel { grid-column: 1 / -1; min-height: auto; } .win98-statusbar { grid-template-columns: 1fr 1fr 1fr; } }
+@media (max-width: 760px) { .win98-desktop { padding: 4px; } .win98-app-window { height: auto; min-height: calc(100vh - 8px); overflow: visible; } .win98-content, .win98-tab-page { overflow: visible; } .win98-control-strip, .win98-summary-zone, .win98-tab-layout { grid-template-columns: 1fr; } .win98-action-panel { grid-column: auto; } .win98-statusbar { grid-template-columns: 1fr 1fr; } .win98-toolbar, .win98-menubar { overflow-x: auto; } }
