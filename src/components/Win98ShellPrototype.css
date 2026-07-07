@@ -69,14 +69,14 @@ body { margin: 0; }
 .win98-summary-zone { display: grid; grid-template-columns: 1.3fr 1.3fr .5fr; gap: 8px; }
 .win98-panel { min-width: 0; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; }
 .win98-panel > header { display: flex; min-height: 23px; align-items: center; justify-content: space-between; gap: 6px; border-bottom: 1px solid var(--w98-mid); background: #d8d8d8; padding: 3px 6px; }
-.win98-summary-card { min-height: 140px; padding-bottom: 7px; }
-.win98-metric-label { padding: 8px 12px 0; color: #333; font-weight: 700; }
-.win98-readout { padding: 0 10px 4px; font-size: 33px; font-weight: 700; line-height: 1; }
+.win98-summary-card { min-height: 128px; padding-bottom: 5px; }
+.win98-metric-label { padding: 6px 12px 0; color: #333; font-weight: 700; }
+.win98-readout { padding: 0 10px 3px; font-size: 31px; font-weight: 700; line-height: 1; }
 .win98-substatus { display: inline-block; margin: -2px 10px 4px; border: 1px solid #808080; background: #eee; padding: 0 5px; font-size: 11px; font-weight: 700; }
-.win98-summary-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 18px; margin: 0; padding: 0 10px; }
+.win98-summary-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; margin: 0; padding: 0 10px; }
 .win98-summary-card dl div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted #aaa; }
 .win98-summary-card dd { margin: 0; font-weight: 700; }
-.win98-warning-panel { display: grid; grid-template-columns: 20px 1fr; gap: 7px; min-height: 108px; align-self: stretch; background: var(--w98-warn); padding: 8px 9px; }
+.win98-warning-panel { display: grid; grid-template-columns: 20px 1fr; gap: 7px; min-height: 92px; align-self: stretch; background: var(--w98-warn); padding: 7px 9px; }
 .win98-warning-icon { display: inline-grid; width: 19px; height: 19px; place-items: center; border: 2px solid; border-color: #fff #808080 #808080 #fff; background: #ffd34a; font-weight: 700; }
 .win98-warning-panel h3 { margin: 0 0 3px; font-size: 12px; }
 .win98-warning-panel p { margin: 0 0 5px; line-height: 1.25; }
@@ -86,17 +86,17 @@ body { margin: 0; }
 .win98-tabs { display: flex; align-items: flex-end; gap: 2px; overflow-x: auto; padding-left: 6px; }
 .win98-tabs button { position: relative; top: 2px; min-height: 26px; white-space: nowrap; border-bottom-color: var(--w98-gray); box-shadow: none; }
 .win98-tabs button.active { top: 0; min-height: 28px; border-bottom-color: #fff; background: #fff; font-weight: 700; }
-.win98-tab-page { display: grid; min-height: 0; grid-template-rows: auto minmax(0, auto); gap: 6px; overflow: auto; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; padding: 7px; }
+.win98-tab-page { display: grid; min-height: 0; grid-template-rows: auto minmax(0, auto); gap: 5px; overflow: auto; border: 2px solid; border-color: var(--w98-mid) #fff #fff var(--w98-mid); background: #fff; padding: 6px; }
 .win98-tab-layout { display: grid; grid-template-columns: 1.06fr .94fr; gap: 8px; }
-.win98-night-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px; border: 1px solid var(--w98-mid); background: #efefef; padding: 7px 8px; }
-.win98-night-banner span { font-size: 18px; font-weight: 700; }
-.win98-twilight-list { display: grid; margin: 8px; border-top: 1px solid #ddd; }
-.win98-twilight-list div { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid #ddd; padding: 3px 6px; }
+.win98-night-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 5px 8px; border: 1px solid var(--w98-mid); background: #efefef; padding: 5px 8px; }
+.win98-night-banner span { font-size: 16px; font-weight: 700; }
+.win98-twilight-list { display: grid; margin: 5px 8px; border-top: 1px solid #ddd; }
+.win98-twilight-list div { display: grid; grid-template-columns: 70px 1fr; border-bottom: 1px solid #ddd; padding: 2px 6px; }
 .win98-table-wrap { overflow: auto; }
-.win98-preview-panel { max-height: 146px; min-height: 128px; background: #fbfbfb; }
+.win98-preview-panel { max-height: 130px; min-height: 112px; background: #fbfbfb; }
 .win98-preview-panel > header { min-height: 21px; background: #dedede; }
 .win98-preview-panel header span { color: #333; font-weight: 400; }
-.win98-preview-panel .win98-table-wrap { max-height: 102px; }
+.win98-preview-panel .win98-table-wrap { max-height: 88px; }
 .win98-preview-panel .win98-table th { background: #d2d2d2; padding: 2px 6px; }
 .win98-preview-panel .win98-table td { padding: 1px 6px; }
 .win98-table { width: 100%; border-collapse: collapse; background: #fff; }
