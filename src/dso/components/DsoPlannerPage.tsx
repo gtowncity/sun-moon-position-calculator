@@ -483,8 +483,8 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
 
     try {
       const settings = buildSettings(coordinates.location, {
-        locationName,
-        timeZone,
+        locationName: locationName || "Manual location",
+        timeZone: timeZone || "Europe/Berlin",
         startDate,
         endDate,
         intervalMinutes,
@@ -831,7 +831,7 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
                 <article key={`why-${window.nightLabel}-${window.startUtc}`} className="dso-window-card">
                   <div>
                     <strong>{window.nightLabel} {window.startLocal}-{window.endLocal}</strong>
-                    <span>{humanCategory(window.category)} | {formatMinutesCompact(window.durationMinutes)} real -> {formatMinutesCompact(window.effectiveDurationMinutes)} effektiv</span>
+                    <span>{humanCategory(window.category)} | {formatMinutesCompact(window.durationMinutes)} real {"->"} {formatMinutesCompact(window.effectiveDurationMinutes)} effektiv</span>
                   </div>
                   {renderWhyWindow(window)}
                 </article>
