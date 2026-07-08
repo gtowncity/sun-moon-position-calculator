@@ -1,0 +1,363 @@
+.dso-assistant {
+  gap: 1rem;
+}
+
+.dso-hero,
+.dso-card-section,
+.dso-step {
+  border: 1px solid var(--crt-border-dark);
+  background: rgba(16, 10, 3, 0.82);
+  padding: 0.9rem;
+}
+
+.dso-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.35fr);
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.dso-hero p,
+.dso-result-summary p,
+.dso-night-focus p {
+  margin: 0.4rem 0 0;
+  color: var(--amber-soft);
+}
+
+.dso-mode-note {
+  border: 1px solid rgba(255, 176, 0, 0.28);
+  background: #060401;
+  color: var(--amber-bright);
+  font-weight: 900;
+  padding: 0.7rem;
+}
+
+.dso-step-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.dso-step {
+  display: grid;
+  grid-column: span 4;
+  align-content: start;
+  gap: 0.65rem;
+}
+
+.dso-step-wide {
+  grid-column: span 8;
+}
+
+.dso-location-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: end;
+}
+
+.dso-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.55rem;
+}
+
+.dso-form-grid.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dso-mode-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.dso-mode-choice label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--crt-border-dark);
+  background: #080502;
+  color: var(--amber-bright);
+  padding: 0.55rem;
+}
+
+.dso-mode-choice input {
+  min-height: auto;
+  width: auto;
+}
+
+.dso-object-results-compact {
+  max-height: 230px;
+}
+
+.dso-analyze-row {
+  position: sticky;
+  bottom: 0.6rem;
+  z-index: 10;
+  justify-content: end;
+  border: 1px solid rgba(255, 176, 0, 0.25);
+  background: rgba(8, 5, 2, 0.9);
+  padding: 0.7rem;
+}
+
+.dso-result-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.dso-result-summary h2 {
+  margin: 0;
+  color: var(--amber-bright);
+  font-size: 1.25rem;
+}
+
+.dso-summary-grid-readable article {
+  min-height: 84px;
+}
+
+.dso-category-help {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  color: var(--amber-soft);
+}
+
+.dso-category-help strong,
+.dso-category-help b {
+  color: var(--amber-bright);
+}
+
+.dso-readable-table {
+  max-height: 480px;
+}
+
+.dso-readable-table table {
+  min-width: 980px;
+}
+
+.dso-readable-table td,
+.dso-readable-table th {
+  white-space: normal;
+}
+
+.dso-window-card {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 176, 0, 0.22);
+  background: #080502;
+  padding: 0.65rem;
+}
+
+.dso-window-card strong {
+  color: var(--amber-bright);
+}
+
+.dso-window-card span {
+  display: block;
+  color: var(--amber-soft);
+  margin-top: 0.2rem;
+}
+
+.dso-why-box {
+  border: 1px solid rgba(255, 176, 0, 0.22);
+  background: #050301;
+}
+
+.dso-why-box summary {
+  cursor: pointer;
+  color: var(--amber-bright);
+  font-weight: 900;
+  padding: 0.55rem;
+}
+
+.dso-why-box p,
+.dso-why-box dl {
+  margin: 0;
+  border-top: 1px solid rgba(255, 176, 0, 0.12);
+  padding: 0.65rem;
+}
+
+.dso-why-grid {
+  grid-template-columns: minmax(140px, 0.55fr) minmax(0, 1fr);
+}
+
+.dso-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.dso-calendar-legend span {
+  border: 1px solid var(--crt-border-dark);
+  color: #050301;
+  font-size: 0.74rem;
+  font-weight: 900;
+  padding: 0.32rem 0.45rem;
+  text-transform: uppercase;
+}
+
+.dso-months {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 0.75rem;
+}
+
+.dso-month {
+  display: grid;
+  gap: 0.45rem;
+  border: 1px solid rgba(255, 176, 0, 0.18);
+  background: #060401;
+  padding: 0.55rem;
+}
+
+.dso-month h3 {
+  margin: 0;
+  color: var(--amber-bright);
+}
+
+.dso-weekdays,
+.dso-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.dso-weekdays span {
+  color: var(--amber-soft);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.dso-calendar-empty,
+.dso-calendar-day {
+  min-height: 82px;
+  border: 1px solid var(--crt-border-dark);
+}
+
+.dso-calendar-day {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 0.12rem;
+  width: 100%;
+  background: #0a0602;
+  color: var(--amber-soft);
+  padding: 0.35rem;
+  text-align: left;
+  text-transform: none;
+}
+
+.dso-calendar-day strong {
+  color: inherit;
+  font-size: 0.95rem;
+}
+
+.dso-calendar-day span,
+.dso-calendar-day small,
+.dso-calendar-day em {
+  color: inherit;
+  font-size: 0.68rem;
+  font-style: normal;
+  line-height: 1.15;
+}
+
+.dso-calendar-day.is-focused {
+  box-shadow: 0 0 0 2px var(--amber-bright), 0 0 18px rgba(255, 176, 0, 0.18);
+}
+
+.dso-calendar-status-selected {
+  border-color: #81c7ff;
+  background: #1f6feb;
+  color: #ecf6ff;
+}
+
+.dso-calendar-status-main {
+  border-color: #45d17f;
+  background: #45d17f;
+  color: #062412;
+}
+
+.dso-calendar-status-extra {
+  border-color: #ffd36a;
+  background: #ffd36a;
+  color: #2a1702;
+}
+
+.dso-calendar-status-test {
+  border-color: #ff8a4b;
+  background: #ff8a4b;
+  color: #2a0d00;
+}
+
+.dso-calendar-status-bad {
+  border-color: #5d3510;
+  background: #3a2309;
+  color: var(--amber-muted);
+}
+
+.dso-calendar-status-excluded,
+.dso-calendar-status-empty {
+  border-color: #514132;
+  background: #1b1712;
+  color: #8f8170;
+}
+
+.dso-calendar-status-forced {
+  border-color: #fff1b8;
+  background: #ffe59a;
+  color: #2a1702;
+}
+
+.dso-night-focus h3 {
+  margin: 0;
+  color: var(--amber-bright);
+}
+
+.dso-window.is-selected-target {
+  outline: 2px solid #81c7ff;
+  outline-offset: -2px;
+  background: #1f6feb;
+  color: #fff;
+}
+
+@media (max-width: 1120px) {
+  .dso-hero,
+  .dso-result-summary,
+  .dso-step-grid,
+  .dso-mode-choice,
+  .dso-form-grid.two-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .dso-step,
+  .dso-step-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .dso-planner-panel {
+    margin: 0.35rem;
+    padding: 0.55rem;
+  }
+
+  .dso-location-search-row,
+  .dso-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dso-months {
+    grid-template-columns: 1fr;
+  }
+
+  .dso-calendar-empty,
+  .dso-calendar-day {
+    min-height: 70px;
+  }
+}
