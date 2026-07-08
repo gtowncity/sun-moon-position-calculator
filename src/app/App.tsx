@@ -5,6 +5,8 @@ import { DsoPlannerPage } from "../dso/components/DsoPlannerPage";
 
 type AppMode = "sunmoon" | "dso";
 
+const defaultDsoStartDate = new Date().toISOString().slice(0, 10);
+
 export function App() {
   const [mode, setMode] = useState<AppMode>("sunmoon");
 
@@ -30,7 +32,19 @@ export function App() {
         </button>
       </div>
 
-      {mode === "sunmoon" ? <Win98ShellPrototype /> : <DsoPlannerPage />}
+      {mode === "sunmoon" ? (
+        <Win98ShellPrototype />
+      ) : (
+        <DsoPlannerPage
+          language="de"
+          latitude="52.520000"
+          longitude="13.405000"
+          elevationMeters="34"
+          locationName="Berlin"
+          timeZone="Europe/Berlin"
+          startDate={defaultDsoStartDate}
+        />
+      )}
     </div>
   );
 }
