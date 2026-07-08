@@ -5,6 +5,7 @@ import { RetroButton } from "../../components/retro/RetroButton";
 import { RetroFieldset } from "../../components/retro/RetroFieldset";
 import { RetroInput } from "../../components/retro/RetroInput";
 import { RetroSelect } from "../../components/retro/RetroSelect";
+import { formatLocationLabel, searchLocation } from "../../domain/geocoding";
 import { downloadBlob, downloadTextFile } from "../../lib/export/download";
 import { validateCoordinates } from "../../lib/location/validation";
 import { parseDecimalNumber } from "../../lib/numberParsing";
@@ -22,7 +23,7 @@ import {
 import { exportDsoMarkdown } from "../export/exportDsoMarkdown";
 import { exportDsoText } from "../export/exportDsoText";
 import { exportDsoXlsx } from "../export/exportDsoXlsx";
-import { formatMinutesCompact, formatNumber, joinReasons } from "../export/format";
+import { formatMinutesCompact, formatNumber } from "../export/format";
 import { generateDsoPlan } from "../planner/generateDsoPlan";
 import {
   loadDsoSetupProfiles,
@@ -32,7 +33,19 @@ import {
   saveFavoriteMessierObjects,
   saveLastDsoSettings
 } from "../storage/dsoProfilesStorage";
-import type { DeepSkyObject, DsoDateExceptions, DsoPlan, DsoPlannerSettings, DsoSetupProfile, QualityProfileId } from "../types";
+import type {
+  DeepSkyObject,
+  DsoCategory,
+  DsoDateExceptions,
+  DsoInterval,
+  DsoNightPlan,
+  DsoPlan,
+  DsoPlannerSettings,
+  DsoSetupProfile,
+  DsoWindow,
+  QualityProfileId
+} from "../types";
+import "./DsoPlannerPage.css";
 
 interface DsoPlannerPageProps {
   language: Language;
@@ -44,12 +57,13 @@ interface DsoPlannerPageProps {
   startDate: string;
 }
 
+type PlannerMode = "range" | "targetHours";
+type CalendarVisualStatus = "selected" | "main" | "extra" | "test" | "bad" | "excluded" | "forced" | "empty";
+
 const dsoText = {
   en: {
     title: "DSO Planner",
-    input: "Input",
     location: "Location",
-    range: "Range",
     object: "Messier object",
     setup: "Setup profile",
     quality: "Quality profile",
@@ -58,15 +72,14 @@ const dsoText = {
     start: "Start date",
     end: "End date",
     weekendOnly: "Weekends only",
-    forced: "Force dates",
-    excluded: "Exclude dates",
+    forced: "Additional nights to include",
+    excluded: "Nights to exclude",
     forcedHint: "YYYY-MM-DD separated by comma or line break",
     interval: "Interval",
     targetHours: "Target effective hours",
-    rangeMode: "Evaluate range",
-    targetMode: "Target integration",
+    rangeMode: "Analyze date range",
+    targetMode: "Reach target exposure",
     search: "Search",
-    favorites: "Favorites",
     addFavorite: "Favorite",
     removeFavorite: "Unfavorite",
     profile: "Object profile",
@@ -77,8 +90,8 @@ const dsoText = {
     nightSummary: "Night summary",
     windows: "Recommended windows",
     intervals: "Detailed intervals",
-    limitations: "No weather is included. The score evaluates Sun, Moon and target altitude.",
-    invalidLocation: "Please choose a valid location in the main control panel first.",
+    limitations: "This tool plans DSO sessions from Sun, Moon, target position and your setup. Weather is not included.",
+    invalidLocation: "Please enter valid coordinates in the DSO location section.",
     invalidRange: "Please choose a valid date range.",
     targetProgress: "Target progress",
     reached: "reached",
@@ -86,50 +99,45 @@ const dsoText = {
     allObjects: "All Messier objects",
     bortle: "Bortle",
     sqm: "SQM",
-    selectedLocation: "Selected app location",
     effective: "effective",
     real: "real",
     bestTime: "Best time",
     reasons: "Reasons",
     warnings: "Warnings",
-    twilight: "Twilight",
     moon: "Moon",
     altitude: "Altitude"
   },
   de: {
     title: "DSO Planner",
-    input: "Eingabe",
-    location: "Standort",
-    range: "Zeitraum",
-    object: "Messier-Objekt",
-    setup: "Setup-Profil",
+    location: "1. Standort",
+    object: "2. Zielobjekt",
+    setup: "3. Setup",
     quality: "Qualitaetsprofil",
-    mode: "Modus",
+    mode: "4. Planung",
     calculate: "DSO Plan berechnen",
     start: "Startdatum",
     end: "Enddatum",
     weekendOnly: "Nur Wochenenden",
-    forced: "Tage erzwingen",
-    excluded: "Tage ausschliessen",
+    forced: "Zusaetzliche Naechte einbeziehen",
+    excluded: "Naechte ausschliessen",
     forcedHint: "YYYY-MM-DD, getrennt mit Komma oder Zeilenumbruch",
-    interval: "Intervall",
+    interval: "Rechenintervall",
     targetHours: "Effektive Wunschstunden",
-    rangeMode: "Zeitraum auswerten",
-    targetMode: "Wunschbelichtungszeit",
-    search: "Suche",
-    favorites: "Favoriten",
+    rangeMode: "Zeitraum analysieren",
+    targetMode: "Wunschbelichtungszeit erreichen",
+    search: "Objekt suchen",
     addFavorite: "Favorit",
     removeFavorite: "Entfernen",
     profile: "Objektprofil",
     calendar: "Kalender",
-    results: "DSO Ergebnisse",
+    results: "5. Ergebnis",
     noPlan: "Noch kein DSO Plan berechnet.",
     export: "DSO Plan exportieren",
-    nightSummary: "Nacht-Zusammenfassung",
-    windows: "Empfohlene Fenster",
-    intervals: "Detail-Intervalle",
-    limitations: "Kein Wetter enthalten. Der Score bewertet Sonne, Mond und Zielhoehe.",
-    invalidLocation: "Bitte zuerst einen gueltigen Standort im Haupt-Kontrollpanel waehlen.",
+    nightSummary: "Naechte im Ueberblick",
+    windows: "Top-Aufnahmefenster",
+    intervals: "Detailintervalle / Rohdaten",
+    limitations: "Dieses Tool plant DSO-Aufnahmen anhand von Sonne, Mond, Objektposition und deinem Setup. Wetter ist nicht enthalten.",
+    invalidLocation: "Bitte gueltige Koordinaten im DSO-Standortbereich eingeben.",
     invalidRange: "Bitte einen gueltigen Zeitraum waehlen.",
     targetProgress: "Ziel-Fortschritt",
     reached: "erreicht",
@@ -137,17 +145,30 @@ const dsoText = {
     allObjects: "Alle Messier-Objekte",
     bortle: "Bortle",
     sqm: "SQM",
-    selectedLocation: "Ausgewaehlter App-Standort",
     effective: "effektiv",
     real: "real",
     bestTime: "Beste Zeit",
     reasons: "Gruende",
     warnings: "Warnungen",
-    twilight: "Daemmerung",
     moon: "Mond",
     altitude: "Hoehe"
   }
 } as const;
+
+const germanMonths = [
+  "Januar",
+  "Februar",
+  "Maerz",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember"
+];
 
 function addDays(date: string, days: number): string {
   return Temporal.PlainDate.from(date).add({ days }).toString();
@@ -166,8 +187,9 @@ function uniqueById(profiles: DsoSetupProfile[]): DsoSetupProfile[] {
 
 function buildSettings(
   location: ObserverLocation,
-  props: DsoPlannerPageProps,
   state: {
+    locationName: string;
+    timeZone: string;
     startDate: string;
     endDate: string;
     intervalMinutes: number;
@@ -175,7 +197,7 @@ function buildSettings(
     objectId: string;
     setupProfile: DsoSetupProfile;
     qualityId: string;
-    mode: "range" | "targetHours";
+    mode: PlannerMode;
     targetEffectiveHours: string;
     forceDates: string;
     excludeDates: string;
@@ -191,8 +213,8 @@ function buildSettings(
 
   return {
     location,
-    locationName: props.locationName || "Manual location",
-    timeZone: props.timeZone,
+    locationName: state.locationName || "Manual location",
+    timeZone: state.timeZone || "Europe/Berlin",
     startDate: state.startDate,
     endDate: state.endDate,
     weekendOnly: state.weekendOnly,
@@ -216,9 +238,167 @@ function filename(prefix: string, extension: string): string {
   return `${prefix}.${extension}`;
 }
 
+function windowKey(window: DsoWindow): string {
+  return `${window.nightLabel}-${window.startUtc}-${window.endUtc}`;
+}
+
+function categoryMeaning(category: DsoCategory): string {
+  switch (category) {
+    case "MAIN":
+      return "beste Hauptdaten, bevorzugt stacken";
+    case "EXTRA":
+      return "brauchbare Zusatzdaten, meist nutzbar";
+    case "TEST":
+      return "nur Testdaten / schwach, vorsichtig verwenden";
+    case "BAD":
+      return "nicht aufnehmen";
+  }
+}
+
+function humanCategory(category: DsoCategory): string {
+  return `${category} - ${categoryMeaning(category)}`;
+}
+
+function humanizeReason(reason: string): string {
+  if (reason.includes("No astronomical night interval")) return "Keine astronomische Nacht in diesem Zeitraum.";
+  if (reason.includes("Weak broadband target")) return "Der Himmel ist fuer dieses schwache Breitband-Objekt noch zu hell.";
+  if (reason.includes("Target below usable altitude") || reason.includes("Target never reaches usable altitude")) return "Das Objekt steht zu niedrig.";
+  if (reason.includes("Low target altitude")) return "Das Objekt steht niedrig: hoehere Airmass und mehr Risiko.";
+  if (reason.includes("Moon below horizon")) return "Der Mond ist unter dem Horizont, also kein Mondproblem.";
+  if (reason.includes("Moon") && reason.includes("high")) return "Der Mond steht hoch und kann dieses Ziel stoeren.";
+  if (reason.includes("bright astronomical twilight")) return "Es ist noch zu hell fuer saubere Hauptdaten.";
+  if (reason.includes("Broadband galaxy details")) return "Galaxien-Details profitieren stark von dunklem, mondfreiem Himmel.";
+  if (reason.includes("Sun")) return reason.replace("Sun", "Sonne").replace("target", "Ziel");
+  return reason;
+}
+
+function humanizeReasonList(reasons: string[], limit = 3): string {
+  return reasons.slice(0, limit).map(humanizeReason).join("; ") || "-";
+}
+
+function statusLabel(status: "included" | "excluded" | "forced"): string {
+  if (status === "forced") return "zusaetzlich einbezogen";
+  if (status === "excluded") return "ausgeschlossen";
+  return "wird berechnet";
+}
+
+function ratingLabel(rating: DsoNightPlan["overallNightRating"]): string {
+  switch (rating) {
+    case "excellent":
+      return "sehr gut";
+    case "good":
+      return "gut";
+    case "usable":
+      return "brauchbar";
+    case "poor":
+      return "schwach";
+    case "bad":
+      return "schlecht";
+  }
+}
+
+function monthLabel(month: string): string {
+  const date = Temporal.PlainYearMonth.from(month);
+  return `${germanMonths[date.month - 1]} ${date.year}`;
+}
+
+function getWindowNightDate(window: DsoWindow): string {
+  return window.nightLabel.slice(0, 10);
+}
+
+function findRepresentativeInterval(plan: DsoPlan, window: DsoWindow): DsoInterval | null {
+  const night = plan.nights.find((entry) => entry.nightLabel === window.nightLabel);
+  if (!night) return null;
+  const start = Temporal.Instant.from(window.startUtc);
+  const end = Temporal.Instant.from(window.endUtc);
+  const matches = night.intervals.filter((interval) => {
+    const instant = Temporal.Instant.from(interval.utcDateTime);
+    return Temporal.Instant.compare(instant, start) >= 0 && Temporal.Instant.compare(instant, end) < 0;
+  });
+  return matches.sort((a, b) => b.finalDsoScore - a.finalDsoScore)[0] ?? null;
+}
+
+function primaryWindowReason(window: DsoWindow): string {
+  return humanizeReasonList([...window.warningsSummary, ...window.reasonsSummary], 1);
+}
+
+function nightStatus(night: DsoNightPlan | undefined, selected: boolean, excluded: boolean, forced: boolean): CalendarVisualStatus {
+  if (excluded) return "excluded";
+  if (selected) return "selected";
+  if (forced) return "forced";
+  if (!night) return "empty";
+  if (night.mainDuration > 0 || night.overallNightRating === "excellent" || night.overallNightRating === "good") return "main";
+  if (night.extraDuration > 0 || night.overallNightRating === "usable") return "extra";
+  if (night.testDuration > 0 || night.overallNightRating === "poor") return "test";
+  return "bad";
+}
+
+function calendarStatusText(status: CalendarVisualStatus): string {
+  switch (status) {
+    case "selected":
+      return "ausgewaehlt";
+    case "main":
+      return "sehr gut";
+    case "extra":
+      return "brauchbar";
+    case "test":
+      return "Test";
+    case "bad":
+      return "schlecht";
+    case "excluded":
+      return "ausgeschlossen";
+    case "forced":
+      return "zusaetzlich";
+    case "empty":
+      return "-";
+  }
+}
+
+function uniqueMonths(startDate: string, endDate: string): string[] {
+  const start = Temporal.PlainDate.from(startDate).with({ day: 1 });
+  const end = Temporal.PlainDate.from(endDate).with({ day: 1 });
+  const months: string[] = [];
+  let current = start;
+  while (Temporal.PlainDate.compare(current, end) <= 0) {
+    months.push(current.toPlainYearMonth().toString());
+    current = current.add({ months: 1 });
+  }
+  return months;
+}
+
+function nightsByDate(plan: DsoPlan): Map<string, DsoNightPlan> {
+  return new Map(plan.nights.map((night) => [night.dateStart, night]));
+}
+
+function selectedEffectiveByDate(windows: DsoWindow[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const window of windows) {
+    const date = getWindowNightDate(window);
+    map.set(date, (map.get(date) ?? 0) + window.effectiveDurationMinutes);
+  }
+  return map;
+}
+
+function selectedRealByDate(windows: DsoWindow[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const window of windows) {
+    const date = getWindowNightDate(window);
+    map.set(date, (map.get(date) ?? 0) + window.durationMinutes);
+  }
+  return map;
+}
+
 export function DsoPlannerPage(props: DsoPlannerPageProps) {
   const text = dsoText[props.language];
   const stored = typeof localStorage === "undefined" ? null : loadLastDsoSettings();
+  const [locationName, setLocationName] = useState(stored?.location?.latitude ? stored.locationName : props.locationName || "Berlin");
+  const [latitude, setLatitude] = useState(String(stored?.location?.latitude ?? props.latitude));
+  const [longitude, setLongitude] = useState(String(stored?.location?.longitude ?? props.longitude));
+  const [elevationMeters, setElevationMeters] = useState(String(stored?.location?.elevationMeters ?? props.elevationMeters));
+  const [timeZone, setTimeZone] = useState(stored?.timeZone ?? props.timeZone);
+  const [locationQuery, setLocationQuery] = useState(stored?.locationName ?? props.locationName ?? "Berlin");
+  const [locationMessage, setLocationMessage] = useState("");
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   const [startDate, setStartDate] = useState(stored?.startDate ?? props.startDate);
   const [endDate, setEndDate] = useState(stored?.endDate ?? addDays(props.startDate, 21));
   const [intervalMinutes, setIntervalMinutes] = useState(stored?.intervalMinutes ?? 10);
@@ -226,18 +406,19 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
   const [forceDates, setForceDates] = useState(stored?.exceptions?.forceInclude?.join("\n") ?? "");
   const [excludeDates, setExcludeDates] = useState(stored?.exceptions?.exclude?.join("\n") ?? "");
   const [objectId, setObjectId] = useState(stored?.objectId ?? "M31");
-  const [objectQuery, setObjectQuery] = useState("M31");
+  const [objectQuery, setObjectQuery] = useState(stored?.objectId ?? "M31");
   const [setupProfiles] = useState(() => uniqueById(loadDsoSetupProfiles()));
   const [setupProfileId, setSetupProfileId] = useState(stored?.setupProfile?.id ?? defaultDsoSetupProfile.id);
   const [qualityId, setQualityId] = useState(stored?.qualityProfile?.id ?? loadLastQualityProfileId());
-  const [mode, setMode] = useState<"range" | "targetHours">(stored?.mode ?? "range");
-  const [targetEffectiveHours, setTargetEffectiveHours] = useState(String(stored?.targetEffectiveHours ?? 25));
+  const [mode, setMode] = useState<PlannerMode>(stored?.mode ?? "range");
+  const [targetEffectiveHours, setTargetEffectiveHours] = useState(String(stored?.targetEffectiveHours ?? 20));
   const [bortle, setBortle] = useState(String(stored?.bortle ?? 4.6));
   const [sqm, setSqm] = useState(String(stored?.sqm ?? 21.0));
   const [favorites, setFavorites] = useState<string[]>(() => loadFavoriteMessierObjects());
   const [messages, setMessages] = useState<string[]>([]);
   const [plan, setPlan] = useState<DsoPlan | null>(null);
   const [showIntervals, setShowIntervals] = useState(false);
+  const [selectedNightLabel, setSelectedNightLabel] = useState<string | null>(null);
 
   const selectedObject = useMemo(() => messierCatalog.find((object) => object.id === objectId) ?? messierCatalog[30], [objectId]);
   const setupProfile = useMemo(
@@ -247,6 +428,21 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
   const searchResults = useMemo(() => searchMessierObjects(objectQuery, 12), [objectQuery]);
   const fieldOfView = setupFieldOfView(setupProfile);
   const pixelScale = setupPixelScaleArcSec(setupProfile);
+  const isTargetHoursMode = mode === "targetHours";
+  const targetPlan = plan?.targetHoursPlan ?? null;
+  const selectedWindows = targetPlan?.selectedWindows ?? [];
+  const selectedWindowKeys = useMemo(() => new Set(selectedWindows.map(windowKey)), [selectedWindows]);
+  const selectedDates = useMemo(() => new Set(selectedWindows.map(getWindowNightDate)), [selectedWindows]);
+  const nightMap = useMemo(() => (plan ? nightsByDate(plan) : new Map<string, DsoNightPlan>()), [plan]);
+  const selectedEffectiveMap = useMemo(() => selectedEffectiveByDate(selectedWindows), [selectedWindows]);
+  const selectedRealMap = useMemo(() => selectedRealByDate(selectedWindows), [selectedWindows]);
+  const focusedNight = plan?.nights.find((night) => night.nightLabel === selectedNightLabel) ?? plan?.nights[0] ?? null;
+  const windowsForDisplay = plan
+    ? isTargetHoursMode && targetPlan
+      ? targetPlan.selectedWindows
+      : plan.recommendedWindows.slice(0, 40)
+    : [];
+  const reserveEffectiveMinutes = plan && targetPlan ? Math.max(0, plan.totals.effectiveMinutes - targetPlan.effectiveDurationMinutes) : 0;
 
   function handleFavorite() {
     const next = favorites.includes(objectId) ? favorites.filter((id) => id !== objectId) : [...favorites, objectId];
@@ -254,8 +450,26 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
     saveFavoriteMessierObjects(next);
   }
 
+  async function handleLocationSearch() {
+    setIsSearchingLocation(true);
+    setLocationMessage("");
+    try {
+      const result = await searchLocation(locationQuery);
+      setLocationName(formatLocationLabel(result));
+      setLatitude(result.latitude.toFixed(6));
+      setLongitude(result.longitude.toFixed(6));
+      setElevationMeters(String(Math.round(result.elevation ?? 0)));
+      setTimeZone(result.timezone ?? "Europe/Berlin");
+      setLocationMessage("Ort gefunden. Du kannst die Koordinaten trotzdem manuell anpassen.");
+    } catch (error) {
+      setLocationMessage(error instanceof Error ? error.message : "Ortssuche fehlgeschlagen. Bitte Koordinaten manuell eingeben.");
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  }
+
   function calculate() {
-    const coordinates = validateCoordinates(props.latitude, props.longitude, props.elevationMeters);
+    const coordinates = validateCoordinates(latitude, longitude, elevationMeters);
     if (!coordinates.location) {
       setMessages([text.invalidLocation]);
       setPlan(null);
@@ -268,7 +482,9 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
     }
 
     try {
-      const settings = buildSettings(coordinates.location, props, {
+      const settings = buildSettings(coordinates.location, {
+        locationName,
+        timeZone,
         startDate,
         endDate,
         intervalMinutes,
@@ -286,7 +502,8 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
       const nextPlan = generateDsoPlan(settings);
       saveLastDsoSettings(settings);
       setPlan(nextPlan);
-      setMessages(nextPlan.warnings.slice(0, 4));
+      setSelectedNightLabel(nextPlan.nights[0]?.nightLabel ?? null);
+      setMessages(nextPlan.warnings.slice(0, 4).map(humanizeReason));
     } catch (error) {
       setMessages([error instanceof Error ? error.message : "DSO calculation failed."]);
       setPlan(null);
@@ -310,64 +527,133 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
     );
   }
 
-  return (
-    <section className="dso-planner-panel" aria-label={text.title}>
-      <div className="terminal-section-title">[{text.title}]</div>
-      <p className="compact-hint">{text.limitations}</p>
+  function renderWhyWindow(window: DsoWindow) {
+    if (!plan) return null;
+    const interval = findRepresentativeInterval(plan, window);
+    return (
+      <details className="dso-why-box">
+        <summary>Warum diese Bewertung?</summary>
+        <p>
+          Dieses Fenster ist <strong>{window.category}</strong>, weil Sonne, Mond und Zielhoehe zusammen einen Score von etwa {formatNumber(window.averageScore, 0)} ergeben.
+          {window.category === "EXTRA" && " Es ist brauchbar, aber nicht perfekt genug fuer MAIN."}
+          {window.selectedForTarget && " Dieses Fenster wurde fuer die Wunschbelichtungszeit ausgewaehlt."}
+        </p>
+        <dl className="terminal-report dso-why-grid">
+          <dt>Sonnenhoehe</dt><dd>{formatNumber(window.averageSunAltitude)} deg</dd>
+          <dt>Daemmerung</dt><dd>{interval?.twilightClass ?? "-"}</dd>
+          <dt>Mondhoehe</dt><dd>{formatNumber(window.averageMoonAltitude)} deg</dd>
+          <dt>Mondbeleuchtung</dt><dd>{formatNumber(window.averageMoonIllumination, 0)}%</dd>
+          <dt>Mondabstand</dt><dd>{formatNumber(window.averageMoonDistance, 0)} deg</dd>
+          <dt>Zielhoehe</dt><dd>{formatNumber(window.averageTargetAltitude)} deg</dd>
+          <dt>Airmass</dt><dd>{interval?.targetAirmassApprox ? formatNumber(interval.targetAirmassApprox, 2) : "-"}</dd>
+          <dt>Score Sonne</dt><dd>{interval ? formatNumber(interval.sunScore, 0) : "-"}</dd>
+          <dt>Score Mond</dt><dd>{interval ? formatNumber(interval.moonScore, 0) : "-"}</dd>
+          <dt>Score Zielhoehe</dt><dd>{interval ? formatNumber(interval.targetAltitudeScore, 0) : "-"}</dd>
+          <dt>Finaler Score</dt><dd>{formatNumber(window.averageScore, 0)}</dd>
+          <dt>Kategorie</dt><dd>{humanCategory(window.category)}</dd>
+          <dt>Reale Dauer</dt><dd>{formatMinutesCompact(window.durationMinutes)}</dd>
+          <dt>Effektive Dauer</dt><dd>{formatMinutesCompact(window.effectiveDurationMinutes)}</dd>
+        </dl>
+        <p className="compact-hint">{humanizeReasonList([...window.warningsSummary, ...window.reasonsSummary], 4)}</p>
+      </details>
+    );
+  }
 
-      <div className="dso-input-grid">
-        <RetroFieldset legend={text.location}>
-          <div className="compact-location-display">
-            <strong>{props.locationName || text.selectedLocation}</strong>
-            <span>{props.latitude}, {props.longitude}</span>
-            <span>{props.timeZone} | {text.bortle}: {bortle} | {text.sqm}: {sqm}</span>
+  function renderCalendar() {
+    if (!plan) return null;
+    const months = uniqueMonths(plan.settings.startDate, plan.settings.endDate);
+    return (
+      <section className="dso-calendar dso-card-section">
+        <div className="terminal-section-title">[{text.calendar}]</div>
+        <div className="dso-calendar-legend">
+          <span className="dso-calendar-status-selected">ausgewaehlt fuer Ziel</span>
+          <span className="dso-calendar-status-main">sehr gut / MAIN</span>
+          <span className="dso-calendar-status-extra">brauchbar / EXTRA</span>
+          <span className="dso-calendar-status-test">Testdaten</span>
+          <span className="dso-calendar-status-bad">schlecht</span>
+          <span className="dso-calendar-status-excluded">ausgeschlossen</span>
+        </div>
+        <div className="dso-months">
+          {months.map((month) => {
+            const first = Temporal.PlainYearMonth.from(month).toPlainDate({ day: 1 });
+            const daysInMonth = first.daysInMonth;
+            const blanks = Array.from({ length: first.dayOfWeek - 1 }, (_, index) => index);
+            return (
+              <article key={month} className="dso-month">
+                <h3>{monthLabel(month)}</h3>
+                <div className="dso-weekdays"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+                <div className="dso-month-grid">
+                  {blanks.map((blank) => <span key={`blank-${blank}`} className="dso-calendar-empty" />)}
+                  {Array.from({ length: daysInMonth }, (_, index) => {
+                    const date = first.add({ days: index }).toString();
+                    const entry = plan.calendar.find((item) => item.date === date);
+                    const night = nightMap.get(date);
+                    const excluded = entry?.status === "excluded";
+                    const forced = entry?.status === "forced";
+                    const status = nightStatus(night, selectedDates.has(date), excluded, forced);
+                    const selectedEff = selectedEffectiveMap.get(date) ?? 0;
+                    const effective = isTargetHoursMode ? selectedEff : night?.effectiveDuration ?? 0;
+                    return (
+                      <button
+                        type="button"
+                        key={date}
+                        className={`dso-calendar-day dso-calendar-status-${status} ${focusedNight?.dateStart === date ? "is-focused" : ""}`}
+                        onClick={() => night && setSelectedNightLabel(night.nightLabel)}
+                        title={`${date}: ${entry ? statusLabel(entry.status) : "ausserhalb Suchzeitraum"}`}
+                      >
+                        <strong>{index + 1}</strong>
+                        <span>{calendarStatusText(status)}</span>
+                        <small>{night?.bestWindowStart ? `${night.bestWindowStart}-${night.bestWindowEnd ?? ""}` : "-"}</small>
+                        <em>{effective > 0 ? formatMinutesCompact(effective) : ""}</em>
+                      </button>
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="dso-planner-panel dso-assistant" aria-label={text.title}>
+      <div className="dso-hero">
+        <div>
+          <div className="terminal-section-title">[{text.title}]</div>
+          <p>{text.limitations}</p>
+        </div>
+        <div className="dso-mode-note">
+          {isTargetHoursMode
+            ? "Modus: Die besten Fenster werden bis zur Wunschbelichtungszeit gesammelt."
+            : "Modus: Alle Naechte im Zeitraum werden bewertet."}
+        </div>
+      </div>
+
+      <div className="dso-step-grid">
+        <RetroFieldset legend={text.location} className="dso-step dso-step-wide">
+          <div className="dso-location-search-row">
+            <label>Ort / PLZ suchen
+              <RetroInput value={locationQuery} onChange={(event) => setLocationQuery(event.target.value)} placeholder="z.B. Geiselhoering, Berlin, 94333" />
+            </label>
+            <RetroButton type="button" onClick={handleLocationSearch} disabled={isSearchingLocation}>{isSearchingLocation ? "Suche..." : "Ort suchen"}</RetroButton>
           </div>
-          <div className="calculation-options-grid">
+          {locationMessage && <p className="compact-hint">{locationMessage}</p>}
+          <div className="dso-form-grid">
+            <label>Standortname<RetroInput value={locationName} onChange={(event) => setLocationName(event.target.value)} /></label>
+            <label>Breite<RetroInput value={latitude} inputMode="decimal" onChange={(event) => setLatitude(event.target.value)} /></label>
+            <label>Laenge<RetroInput value={longitude} inputMode="decimal" onChange={(event) => setLongitude(event.target.value)} /></label>
+            <label>Hoehe Meter<RetroInput value={elevationMeters} inputMode="decimal" onChange={(event) => setElevationMeters(event.target.value)} /></label>
+            <label>Zeitzone<RetroInput value={timeZone} onChange={(event) => setTimeZone(event.target.value)} /></label>
             <label>{text.bortle}<RetroInput value={bortle} inputMode="decimal" onChange={(event) => setBortle(event.target.value)} /></label>
             <label>{text.sqm}<RetroInput value={sqm} inputMode="decimal" onChange={(event) => setSqm(event.target.value)} /></label>
           </div>
         </RetroFieldset>
 
-        <RetroFieldset legend={text.range}>
-          <label>{text.start}<RetroInput type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
-          <label>{text.end}<RetroInput type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label>
-          <label>{text.interval}
-            <RetroSelect value={String(intervalMinutes)} onChange={(event) => setIntervalMinutes(Number(event.target.value))}>
-              {[5, 10, 15, 30, 60].map((minutes) => <option key={minutes} value={minutes}>{minutes} min</option>)}
-            </RetroSelect>
-          </label>
-          <label className="dso-checkbox"><input type="checkbox" checked={weekendOnly} onChange={(event) => setWeekendOnly(event.target.checked)} /> {text.weekendOnly}</label>
-        </RetroFieldset>
-
-        <RetroFieldset legend={text.mode}>
-          <RetroSelect value={mode} onChange={(event) => setMode(event.target.value as "range" | "targetHours")}>
-            <option value="range">{text.rangeMode}</option>
-            <option value="targetHours">{text.targetMode}</option>
-          </RetroSelect>
-          {mode === "targetHours" && (
-            <label>{text.targetHours}<RetroInput value={targetEffectiveHours} inputMode="decimal" onChange={(event) => setTargetEffectiveHours(event.target.value)} /></label>
-          )}
-          <label>{text.quality}
-            <RetroSelect value={qualityId} onChange={(event) => setQualityId(event.target.value as QualityProfileId)}>
-              {qualityProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
-            </RetroSelect>
-          </label>
-        </RetroFieldset>
-
-        <RetroFieldset legend={text.setup}>
-          <RetroSelect value={setupProfileId} onChange={(event) => setSetupProfileId(event.target.value)}>
-            {setupProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
-          </RetroSelect>
-          <dl className="terminal-report">
-            <dt>FOV</dt><dd>{fieldOfView ? `${formatNumber(fieldOfView.widthDeg, 2)} x ${formatNumber(fieldOfView.heightDeg, 2)} deg` : "-"}</dd>
-            <dt>Scale</dt><dd>{pixelScale ? `${formatNumber(pixelScale, 2)} arcsec/px` : "-"}</dd>
-            <dt>Filter</dt><dd>{setupProfile.filterMode}</dd>
-          </dl>
-        </RetroFieldset>
-
-        <RetroFieldset legend={text.object} className="dso-object-search">
-          <label>{text.search}<RetroInput value={objectQuery} onChange={(event) => setObjectQuery(event.target.value)} placeholder="M31, Andromeda, NGC 224" /></label>
-          <div className="dso-object-results">
+        <RetroFieldset legend={text.object} className="dso-step dso-step-wide dso-object-search">
+          <label>{text.search}<RetroInput value={objectQuery} onChange={(event) => setObjectQuery(event.target.value)} placeholder="M31, M51, Andromeda" /></label>
+          <div className="dso-object-results dso-object-results-compact">
             {searchResults.map((object) => (
               <button
                 type="button"
@@ -390,32 +676,78 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
           </div>
         </RetroFieldset>
 
-        <RetroFieldset legend={text.profile} className="dso-object-card">
+        <RetroFieldset legend={text.profile} className="dso-step dso-object-card">
           <h3>{selectedObject.id} {selectedObject.primaryName}</h3>
           <dl className="terminal-report">
             <dt>RA/Dec</dt><dd>{formatNumber(selectedObject.raHours, 3)}h / {formatNumber(selectedObject.decDeg, 2)} deg</dd>
-            <dt>Type</dt><dd>{objectTypeLabel(selectedObject.objectType)}</dd>
-            <dt>Size</dt><dd>{selectedObject.majorAxisArcMin ?? selectedObject.apparentSizeArcMin ?? "-"} arcmin</dd>
+            <dt>Typ</dt><dd>{objectTypeLabel(selectedObject.objectType)}</dd>
+            <dt>Groesse</dt><dd>{selectedObject.majorAxisArcMin ?? selectedObject.apparentSizeArcMin ?? "-"} arcmin</dd>
             <dt>Mag</dt><dd>{selectedObject.visualMagnitude ?? "-"}</dd>
-            <dt>Moon</dt><dd>{formatNumber(selectedObject.planningProfile.moonSensitivity, 2)}</dd>
-            <dt>Main alt</dt><dd>{selectedObject.planningProfile.minMainAltitudeDeg} deg</dd>
+            <dt>Mondempfindlich</dt><dd>{formatNumber(selectedObject.planningProfile.moonSensitivity, 2)}</dd>
+            <dt>MAIN ab</dt><dd>{selectedObject.planningProfile.minMainAltitudeDeg} deg Hoehe</dd>
           </dl>
-          <p className="compact-hint">{[...(selectedObject.notes ?? []), ...selectedObject.planningProfile.notes].slice(0, 3).join(" ")}</p>
+          <p className="compact-hint">{[...(selectedObject.notes ?? []), ...selectedObject.planningProfile.notes].slice(0, 3).map(humanizeReason).join(" ")}</p>
         </RetroFieldset>
 
-        <RetroFieldset legend="Exceptions">
-          <label>{text.forced}<textarea value={forceDates} onChange={(event) => setForceDates(event.target.value)} placeholder={text.forcedHint} /></label>
-          <label>{text.excluded}<textarea value={excludeDates} onChange={(event) => setExcludeDates(event.target.value)} placeholder={text.forcedHint} /></label>
+        <RetroFieldset legend={text.setup} className="dso-step">
+          <label>{text.setup}
+            <RetroSelect value={setupProfileId} onChange={(event) => setSetupProfileId(event.target.value)}>
+              {setupProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+            </RetroSelect>
+          </label>
+          <label>{text.quality}
+            <RetroSelect value={qualityId} onChange={(event) => setQualityId(event.target.value as QualityProfileId)}>
+              {qualityProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+            </RetroSelect>
+          </label>
+          <dl className="terminal-report">
+            <dt>FOV</dt><dd>{fieldOfView ? `${formatNumber(fieldOfView.widthDeg, 2)} x ${formatNumber(fieldOfView.heightDeg, 2)} deg` : "-"}</dd>
+            <dt>Scale</dt><dd>{pixelScale ? `${formatNumber(pixelScale, 2)} arcsec/px` : "-"}</dd>
+            <dt>Filter</dt><dd>{setupProfile.filterMode}</dd>
+          </dl>
+        </RetroFieldset>
+
+        <RetroFieldset legend={text.mode} className="dso-step dso-step-wide">
+          <div className="dso-mode-choice">
+            <label><input type="radio" checked={mode === "range"} onChange={() => setMode("range")} /> <span>{text.rangeMode}</span></label>
+            <label><input type="radio" checked={mode === "targetHours"} onChange={() => setMode("targetHours")} /> <span>{text.targetMode}</span></label>
+          </div>
+          <p className="compact-hint">
+            {isTargetHoursMode
+              ? "Du gibst Wunschstunden und einen Suchzeitraum an. Das Ergebnis zeigt hauptsaechlich die ausgewaehlten Fenster bis zum Ziel."
+              : "Alle berechneten Naechte im Zeitraum werden zusammengefasst."}
+          </p>
+          <div className="dso-form-grid">
+            <label>{text.start}<RetroInput type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
+            <label>{text.end}<RetroInput type="date" value={endDate} onChange={(event) => setEndDate(event.target.value)} /></label>
+            <label>{text.interval}
+              <RetroSelect value={String(intervalMinutes)} onChange={(event) => setIntervalMinutes(Number(event.target.value))}>
+                {[5, 10, 15, 30, 60].map((minutes) => <option key={minutes} value={minutes}>{minutes} min</option>)}
+              </RetroSelect>
+            </label>
+            {isTargetHoursMode && (
+              <label>{text.targetHours}<RetroInput value={targetEffectiveHours} inputMode="decimal" onChange={(event) => setTargetEffectiveHours(event.target.value)} /></label>
+            )}
+            <label className="dso-checkbox"><input type="checkbox" checked={weekendOnly} onChange={(event) => setWeekendOnly(event.target.checked)} /> {text.weekendOnly}</label>
+          </div>
+        </RetroFieldset>
+
+        <RetroFieldset legend="Optionale Ausnahmen" className="dso-step dso-step-wide">
+          <div className="dso-form-grid two-columns">
+            <label>{text.forced}<textarea value={forceDates} onChange={(event) => setForceDates(event.target.value)} placeholder={text.forcedHint} /></label>
+            <label>{text.excluded}<textarea value={excludeDates} onChange={(event) => setExcludeDates(event.target.value)} placeholder={text.forcedHint} /></label>
+          </div>
+          <p className="compact-hint">Zusaetzliche Naechte werden trotz Wochenendfilter berechnet. Ausgeschlossene Naechte werden ignoriert.</p>
         </RetroFieldset>
       </div>
 
-      <div className="analyze-row">
+      <div className="analyze-row dso-analyze-row">
         <RetroButton type="button" variant="primary" onClick={calculate}>{text.calculate}</RetroButton>
       </div>
 
       {messages.length > 0 && <section className="messages compact-messages" aria-live="polite">{messages.map((message) => <p key={message}>{message}</p>)}</section>}
 
-      <section className="dso-results">
+      <section className="dso-results dso-card-section">
         <div className="terminal-section-title">[{text.results}]</div>
         {!plan ? <p className="empty-state">{text.noPlan}</p> : (
           <>
@@ -426,120 +758,149 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
               <RetroButton type="button" onClick={exportMarkdownFile}>MD</RetroButton>
             </div>
 
-            <div className="dso-summary-grid">
-              <article><span>MAIN</span><strong>{formatMinutesCompact(plan.totals.mainMinutes)}</strong></article>
-              <article><span>EXTRA</span><strong>{formatMinutesCompact(plan.totals.extraMinutes)}</strong></article>
-              <article><span>{text.effective}</span><strong>{formatMinutesCompact(plan.totals.effectiveMinutes)}</strong></article>
-              <article><span>Nights</span><strong>{plan.nights.length}</strong></article>
-            </div>
-
-            {plan.targetHoursPlan && (
-              <section className="dso-target-progress">
-                <div className="terminal-section-title">[{text.targetProgress}]</div>
-                <div className="dso-progress-bar"><span style={{ width: `${Math.min(100, plan.targetHoursPlan.effectiveDurationMinutes / Math.max(1, plan.targetHoursPlan.targetEffectiveMinutes) * 100)}%` }} /></div>
+            <section className="dso-result-summary">
+              <div>
+                <h2>{isTargetHoursMode && targetPlan
+                  ? targetPlan.reached
+                    ? `Ziel erreicht: ${formatMinutesCompact(targetPlan.effectiveDurationMinutes)} effektiv ausgewaehlt.`
+                    : `Ziel noch nicht erreicht: ${formatMinutesCompact(targetPlan.remainingEffectiveMinutes)} fehlen.`
+                  : `${plan.nights.length} Naechte im Zeitraum bewertet.`}</h2>
                 <p>
-                  {formatMinutesCompact(plan.targetHoursPlan.effectiveDurationMinutes)} / {formatMinutesCompact(plan.targetHoursPlan.targetEffectiveMinutes)} {text.effective} -
-                  {" "}{plan.targetHoursPlan.reached ? text.reached : `${text.remaining}: ${formatMinutesCompact(plan.targetHoursPlan.remainingEffectiveMinutes)}`}
-                  {" "}({formatMinutesCompact(plan.targetHoursPlan.realDurationMinutes)} {text.real})
+                  {isTargetHoursMode && targetPlan
+                    ? `Nimm zuerst die ${targetPlan.selectedWindows.length} ausgewaehlten Fenster auf. Leicht ueber Ziel ist normal, weil ganze Aufnahmefenster verwendet werden.`
+                    : `Beste Fenster werden nach Score, Zielhoehe, Sonne und Mond sortiert.`}
+                </p>
+              </div>
+              <div className="dso-summary-grid dso-summary-grid-readable">
+                {isTargetHoursMode && targetPlan ? (
+                  <>
+                    <article><span>Ziel</span><strong>{formatMinutesCompact(targetPlan.targetEffectiveMinutes)}</strong></article>
+                    <article><span>Ausgewaehlt</span><strong>{formatMinutesCompact(targetPlan.effectiveDurationMinutes)}</strong></article>
+                    <article><span>Echte Zeit</span><strong>{formatMinutesCompact(targetPlan.realDurationMinutes)}</strong></article>
+                    <article><span>Reserve</span><strong>{formatMinutesCompact(reserveEffectiveMinutes)}</strong></article>
+                  </>
+                ) : (
+                  <>
+                    <article><span>MAIN</span><strong>{formatMinutesCompact(plan.totals.mainMinutes)}</strong></article>
+                    <article><span>EXTRA</span><strong>{formatMinutesCompact(plan.totals.extraMinutes)}</strong></article>
+                    <article><span>{text.effective}</span><strong>{formatMinutesCompact(plan.totals.effectiveMinutes)}</strong></article>
+                    <article><span>Naechte</span><strong>{plan.nights.length}</strong></article>
+                  </>
+                )}
+              </div>
+            </section>
+
+            {targetPlan && (
+              <section className="dso-target-progress dso-card-section">
+                <div className="terminal-section-title">[{text.targetProgress}]</div>
+                <div className="dso-progress-bar"><span style={{ width: `${Math.min(100, targetPlan.effectiveDurationMinutes / Math.max(1, targetPlan.targetEffectiveMinutes) * 100)}%` }} /></div>
+                <p>
+                  Ziel: {formatMinutesCompact(targetPlan.targetEffectiveMinutes)} {text.effective} | Ausgewaehlt: {formatMinutesCompact(targetPlan.effectiveDurationMinutes)} {text.effective} | echte Aufnahmezeit: {formatMinutesCompact(targetPlan.realDurationMinutes)} | Status: {targetPlan.reached ? text.reached : `${text.remaining}: ${formatMinutesCompact(targetPlan.remainingEffectiveMinutes)}`}
                 </p>
               </section>
             )}
 
-            <section className="dso-calendar">
-              <div className="terminal-section-title">[{text.calendar}]</div>
-              <div className="dso-calendar-grid">
-                {plan.calendar.map((entry) => (
-                  <span key={entry.date} className={`dso-day dso-day-${entry.status}`} title={`${entry.nightLabel}: ${entry.reason}`}>
-                    {entry.date.slice(5)}
-                  </span>
-                ))}
-              </div>
-              <div className="twilight-legend">
-                <span className="dso-day dso-day-included">included</span>
-                <span className="dso-day dso-day-forced">forced</span>
-                <span className="dso-day dso-day-excluded">excluded</span>
-              </div>
+            <section className="dso-category-help dso-card-section">
+              <strong>Kategorien:</strong>
+              <span><b>MAIN</b> = beste Hauptdaten, bevorzugt stacken</span>
+              <span><b>EXTRA</b> = brauchbare Zusatzdaten</span>
+              <span><b>TEST</b> = nur Test / schwach</span>
+              <span><b>BAD</b> = nicht aufnehmen</span>
             </section>
 
-            <section className="dso-timelines">
-              {plan.nights.map((night) => (
-                <article key={night.nightLabel} className="dso-night-row">
+            <section className="dso-table-panel dso-card-section">
+              <div className="terminal-section-title">[{text.windows}]</div>
+              <div className="retro-data-grid dso-readable-table">
+                <table>
+                  <thead><tr><th>Datum</th><th>Start</th><th>Ende</th><th>Kategorie</th><th>Echt</th><th>Effektiv</th><th>Score</th><th>Hauptgrund</th></tr></thead>
+                  <tbody>{windowsForDisplay.map((window) => (
+                    <tr key={`${window.nightLabel}-${window.startUtc}`} className={selectedWindowKeys.has(windowKey(window)) ? "is-focused-row" : undefined}>
+                      <td>{window.nightLabel}</td>
+                      <td>{window.startLocal}</td>
+                      <td>{window.endLocal}</td>
+                      <td>{window.selectedForTarget ? "ausgewaehlt " : ""}{window.category}</td>
+                      <td>{formatMinutesCompact(window.durationMinutes)}</td>
+                      <td>{formatMinutesCompact(window.effectiveDurationMinutes)}</td>
+                      <td>{formatNumber(window.averageScore, 0)}</td>
+                      <td>{primaryWindowReason(window)}</td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+              </div>
+              {windowsForDisplay.slice(0, 8).map((window) => (
+                <article key={`why-${window.nightLabel}-${window.startUtc}`} className="dso-window-card">
                   <div>
-                    <strong>{night.nightLabel}</strong>
-                    <span>{night.overallNightRating} | {text.bestTime}: {night.bestWindowStart ?? "-"}-{night.bestWindowEnd ?? "-"}</span>
-                    <span>{text.altitude}: max {formatNumber(night.targetMaxAltitudeDeg)} deg, culmination {night.targetCulminationTime ?? "-"}</span>
+                    <strong>{window.nightLabel} {window.startLocal}-{window.endLocal}</strong>
+                    <span>{humanCategory(window.category)} | {formatMinutesCompact(window.durationMinutes)} real -> {formatMinutesCompact(window.effectiveDurationMinutes)} effektiv</span>
                   </div>
-                  <div className="dso-window-track">
-                    {night.windows.map((window) => (
-                      <span
-                        key={`${window.startUtc}-${window.category}`}
-                        className={`dso-window dso-window-${window.category.toLowerCase()}`}
-                        style={{ flexGrow: Math.max(1, window.durationMinutes) }}
-                        title={`${window.startLocal}-${window.endLocal} ${window.category}, score ${formatNumber(window.averageScore, 0)}, target ${formatNumber(window.averageTargetAltitude)} deg, Moon ${formatNumber(window.averageMoonIllumination, 0)}% / ${formatNumber(window.averageMoonDistance, 0)} deg`}
-                      >
-                        {window.category}
-                      </span>
-                    ))}
-                  </div>
+                  {renderWhyWindow(window)}
                 </article>
               ))}
             </section>
 
-            <section className="dso-table-panel">
+            {renderCalendar()}
+
+            {focusedNight && (
+              <section className="dso-night-focus dso-card-section">
+                <div className="terminal-section-title">[Ausgewaehlte Nacht]</div>
+                <h3>{focusedNight.nightLabel} - {ratingLabel(focusedNight.overallNightRating)}</h3>
+                <dl className="terminal-report">
+                  <dt>Beste Zeit</dt><dd>{focusedNight.bestWindowStart ?? "-"}-{focusedNight.bestWindowEnd ?? "-"}</dd>
+                  <dt>Astronomische Nacht</dt><dd>{focusedNight.astronomicalNightStart ?? "-"}-{focusedNight.astronomicalNightEnd ?? "-"}</dd>
+                  <dt>Kulmination</dt><dd>{focusedNight.targetCulminationTime ?? "-"}</dd>
+                  <dt>Max. Hoehe</dt><dd>{formatNumber(focusedNight.targetMaxAltitudeDeg)} deg</dd>
+                  <dt>MAIN</dt><dd>{formatMinutesCompact(focusedNight.mainDuration)}</dd>
+                  <dt>EXTRA</dt><dd>{formatMinutesCompact(focusedNight.extraDuration)}</dd>
+                  <dt>Effektiv</dt><dd>{formatMinutesCompact(isTargetHoursMode ? (selectedEffectiveMap.get(focusedNight.dateStart) ?? 0) : focusedNight.effectiveDuration)}</dd>
+                </dl>
+                <p className="compact-hint">{humanizeReasonList(focusedNight.mainWarnings, 4)}</p>
+                <div className="dso-window-track">
+                  {focusedNight.windows.map((window) => (
+                    <span
+                      key={`${window.startUtc}-${window.category}`}
+                      className={`dso-window dso-window-${window.category.toLowerCase()} ${selectedWindowKeys.has(windowKey(window)) ? "is-selected-target" : ""}`}
+                      style={{ flexGrow: Math.max(1, window.durationMinutes) }}
+                      title={`${window.startLocal}-${window.endLocal} ${window.category}, score ${formatNumber(window.averageScore, 0)}`}
+                    >
+                      {selectedWindowKeys.has(windowKey(window)) ? "ZIEL" : window.category}
+                    </span>
+                  ))}
+                </div>
+                {selectedRealMap.get(focusedNight.dateStart) ? <p className="compact-hint">Fuer Ziel ausgewaehlt: {formatMinutesCompact(selectedRealMap.get(focusedNight.dateStart) ?? 0)} real / {formatMinutesCompact(selectedEffectiveMap.get(focusedNight.dateStart) ?? 0)} effektiv.</p> : null}
+              </section>
+            )}
+
+            <section className="dso-table-panel dso-card-section">
               <div className="terminal-section-title">[{text.nightSummary}]</div>
-              <div className="retro-data-grid">
+              <div className="retro-data-grid dso-readable-table">
                 <table>
-                  <thead><tr><th>Night</th><th>Rating</th><th>Astro night</th><th>Culmination</th><th>Max alt</th><th>&gt;40</th><th>MAIN</th><th>EXTRA</th><th>Effective</th><th>{text.warnings}</th></tr></thead>
+                  <thead><tr><th>Nacht</th><th>Bewertung</th><th>Beste Zeit</th><th>Max Hoehe</th><th>MAIN</th><th>EXTRA</th><th>Effektiv</th><th>{text.warnings}</th></tr></thead>
                   <tbody>{plan.nights.map((night) => (
                     <tr key={night.nightLabel}>
                       <td>{night.nightLabel}</td>
-                      <td>{night.overallNightRating}</td>
-                      <td>{night.astronomicalNightStart ?? "-"}-{night.astronomicalNightEnd ?? "-"}</td>
-                      <td>{night.targetCulminationTime ?? "-"}</td>
+                      <td>{ratingLabel(night.overallNightRating)}</td>
+                      <td>{night.bestWindowStart ?? "-"}-{night.bestWindowEnd ?? "-"}</td>
                       <td>{formatNumber(night.targetMaxAltitudeDeg)} deg</td>
-                      <td>{formatMinutesCompact(night.timeAbove40)}</td>
                       <td>{formatMinutesCompact(night.mainDuration)}</td>
                       <td>{formatMinutesCompact(night.extraDuration)}</td>
-                      <td>{formatMinutesCompact(night.effectiveDuration)}</td>
-                      <td>{joinReasons(night.mainWarnings.slice(0, 2)) || "-"}</td>
+                      <td>{formatMinutesCompact(isTargetHoursMode ? (selectedEffectiveMap.get(night.dateStart) ?? 0) : night.effectiveDuration)}</td>
+                      <td>{humanizeReasonList(night.mainWarnings, 2)}</td>
                     </tr>
                   ))}</tbody>
                 </table>
               </div>
             </section>
 
-            <section className="dso-table-panel">
-              <div className="terminal-section-title">[{text.windows}]</div>
-              <div className="retro-data-grid">
-                <table>
-                  <thead><tr><th>Night</th><th>Category</th><th>Start</th><th>End</th><th>Duration</th><th>Eff.</th><th>Score</th><th>Target</th><th>{text.moon}</th><th>{text.reasons}</th></tr></thead>
-                  <tbody>{plan.recommendedWindows.slice(0, 40).map((window) => (
-                    <tr key={`${window.nightLabel}-${window.startUtc}`}>
-                      <td>{window.nightLabel}</td>
-                      <td>{window.category}{window.selectedForTarget ? " *" : ""}</td>
-                      <td>{window.startLocal}</td>
-                      <td>{window.endLocal}</td>
-                      <td>{formatMinutesCompact(window.durationMinutes)}</td>
-                      <td>{formatMinutesCompact(window.effectiveDurationMinutes)}</td>
-                      <td>{formatNumber(window.averageScore, 0)}</td>
-                      <td>{formatNumber(window.averageTargetAltitude)} deg</td>
-                      <td>{formatNumber(window.averageMoonIllumination, 0)}% / {formatNumber(window.averageMoonDistance, 0)} deg</td>
-                      <td>{joinReasons(window.reasonsSummary)}</td>
-                    </tr>
-                  ))}</tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="dso-table-panel">
+            <section className="dso-table-panel dso-card-section">
               <div className="dso-section-heading">
                 <div className="terminal-section-title">[{text.intervals}]</div>
-                <RetroButton type="button" onClick={() => setShowIntervals((shown) => !shown)}>{showIntervals ? "Hide" : "Show"}</RetroButton>
+                <RetroButton type="button" onClick={() => setShowIntervals((shown) => !shown)}>{showIntervals ? "Rohdaten ausblenden" : "Rohdaten anzeigen"}</RetroButton>
               </div>
+              <p className="compact-hint">Das sind die Rohdaten pro Intervall. Fuer normale Planung brauchst du sie nicht.</p>
               {showIntervals && (
                 <div className="retro-data-grid">
                   <table>
-                    <thead><tr><th>Night</th><th>Local</th><th>Score</th><th>Cat</th><th>Sun</th><th>Moon</th><th>Moon dist</th><th>Target alt</th><th>Airmass</th><th>{text.reasons}</th></tr></thead>
+                    <thead><tr><th>Nacht</th><th>Lokal</th><th>Score</th><th>Kat</th><th>Sonne</th><th>Mond</th><th>Monddistanz</th><th>Zielhoehe</th><th>Airmass</th><th>{text.reasons}</th></tr></thead>
                     <tbody>{plan.nights.flatMap((night) => night.intervals).slice(0, 800).map((interval) => (
                       <tr key={`${interval.nightLabel}-${interval.utcDateTime}`}>
                         <td>{interval.nightLabel}</td>
@@ -551,7 +912,7 @@ export function DsoPlannerPage(props: DsoPlannerPageProps) {
                         <td>{formatNumber(interval.angularSeparationMoonTargetDeg, 0)} deg</td>
                         <td>{formatNumber(interval.targetAltitudeDeg)} deg</td>
                         <td>{interval.targetAirmassApprox ? formatNumber(interval.targetAirmassApprox, 2) : "-"}</td>
-                        <td>{joinReasons(interval.reasons.slice(0, 3))}</td>
+                        <td>{humanizeReasonList(interval.reasons, 3)}</td>
                       </tr>
                     ))}</tbody>
                   </table>
