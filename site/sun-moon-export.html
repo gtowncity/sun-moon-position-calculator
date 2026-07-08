@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sonne Mond Excel Export</title>
+  <style>
+    :root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--text:#e6edf3;--muted:#8b949e;--accent:#f2cc60;--good:#3fb950;--bad:#f85149}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;font-size:14px}.wrap{max-width:1180px;margin:0 auto;padding:22px}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}h1{margin:0 0 6px;font-size:22px}p{margin:0;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{border:1px solid var(--line);background:var(--panel);padding:14px;border-radius:10px}.card h2{margin:0 0 12px;font-size:15px;color:var(--accent)}label{display:block;margin:8px 0 4px;color:var(--muted);font-size:12px}input,select,button{width:100%;border:1px solid var(--line);border-radius:7px;background:#0d1117;color:var(--text);padding:9px;font:inherit}button{cursor:pointer;background:#21262d;font-weight:700}button.primary{background:var(--accent);color:#111;border-color:#f0b429}button:disabled{opacity:.55;cursor:not-allowed}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.status{margin-top:12px;white-space:pre-wrap;color:var(--muted);line-height:1.4}.warning{border-color:#6e5200;background:#201803;color:#f6e5a6}.warning strong{color:#fff}.preview{margin-top:14px;overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:360px}.preview table{width:100%;border-collapse:collapse;font-size:12px}.preview th,.preview td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;white-space:nowrap}.preview th{background:#21262d;color:#fff;position:sticky;top:0}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.pill{border:1px solid var(--line);background:#0d1117;border-radius:8px;padding:8px;color:var(--muted)}.pill b{display:block;color:#fff}@media(max-width:900px){.grid{grid-template-columns:1fr}.top{display:block}.meta{grid-template-columns:1fr 1fr}}@media(max-width:520px){.meta,.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="top">
+      <div>
+        <h1>Sonne/Mond Datenexport</h1>
+        <p>Einfacher Export fuer lange Zeitraeume: Zeitraum + Intervall rein, Excel raus.</p>
+      </div>
+      <button id="exportBtn" class="primary" style="max-width:220px">Excel erzeugen</button>
+    </section>
+
+    <section class="card warning" style="margin-bottom:12px">
+      <strong>Genauigkeitshinweis:</strong> Die Werte sind berechnete topozentrische astronomische Werte. Sie sind nicht 100% identisch mit realer Beobachtung, weil Refraktion, Wetter, lokaler Horizont, Berge/Gebaeude und Modellgrenzen wirken. Export enthaelt ein Metadata/Accuracy-Sheet.
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Standort</h2>
+        <label>Ort oder PLZ</label>
+        <div class="row"><input id="query" value="Geiselhoering" /><button id="searchBtn">Suchen</button></div>
+        <label>Name im Export</label><input id="placeLabel" value="Geiselhoering" />
+        <div class="row"><div><label>Breite</label><input id="lat" value="48.8290596" /></div><div><label>Laenge</label><input id="lon" value="12.3939088" /></div></div>
+        <label>Hoehe Meter</label><input id="elev" value="360" />
+        <div class="status" id="geoStatus">Ortssuche nutzt Open-Meteo Geocoding.</div>
+      </div>
+
+      <div class="card">
+        <h2>Zeitbereich</h2>
+        <div class="row"><div><label>Startdatum</label><input id="startDate" value="2026-07-10" /></div><div><label>Startzeit</label><input id="startTime" value="16:00" /></div></div>
+        <div class="row"><div><label>Enddatum</label><input id="endDate" value="2026-10-10" /></div><div><label>Endzeit</label><input id="endTime" value="06:00" /></div></div>
+        <label>Zeitzone</label><select id="tz"><option>Europe/Berlin</option><option>UTC</option></select>
+        <label>Intervall</label><select id="interval"><option value="5">5 Minuten</option><option value="10">10 Minuten</option><option value="30">30 Minuten</option><option value="60" selected>60 Minuten</option></select>
+      </div>
+
+      <div class="card">
+        <h2>Objekte & Refraktion</h2>
+        <label>Ziel</label><select id="target"><option value="both">Sonne + Mond</option><option value="sun">Nur Sonne</option><option value="moon">Nur Mond</option></select>
+        <label>Hoehenwert</label><select id="refraction"><option value="normal" selected>Scheinbar + geometrisch</option><option value="geometric">Nur geometrisch</option></select>
+        <label>Max. Zeilen</label><select id="maxRows"><option value="25000">25.000</option><option value="50000" selected>50.000</option><option value="100000">100.000</option></select>
+        <div class="status">Bei Sonne+Mond zaehlt jeder Zeitpunkt als 2 Zeilen.</div>
+      </div>
+
+      <div class="card">
+        <h2>Aktion</h2>
+        <button id="previewBtn">Vorschau berechnen</button>
+        <button id="exportBtn2" class="primary" style="margin-top:8px">Excel erzeugen</button>
+        <div class="status" id="status">Bereit.</div>
+      </div>
+    </section>
+
+    <section class="meta" id="meta"></section>
+    <section class="preview" id="preview"></section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script type="module">
+    import { DateTime } from 'https://cdn.jsdelivr.net/npm/luxon@3.5.0/+esm';
+    import { Body, Equator, Horizon, Illumination, Observer } from 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/+esm';
+
+    const AU_KM = 149597870.7;
+    const $ = id => document.getElementById(id);
+    const number = (value, fallback=0) => { const n = Number(String(value).replace(',', '.')); return Number.isFinite(n) ? n : fallback; };
+    const round = (value, digits=6) => Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
+    const isoLocal = dt => dt.toFormat("yyyy-LL-dd HH:mm");
+    const excelFileName = () => `sun-moon-export_${$('placeLabel').value || 'standort'}_${$('startDate').value}_bis_${$('endDate').value}.xlsx`.replaceAll(' ', '_');
+
+    function getConfig(){
+      return {
+        placeLabel: $('placeLabel').value.trim() || 'Standort',
+        latitudeDeg: number($('lat').value),
+        longitudeDeg: number($('lon').value),
+        elevationMeters: number($('elev').value),
+        timezone: $('tz').value,
+        startLocal: `${$('startDate').value}T${$('startTime').value}`,
+        endLocal: `${$('endDate').value}T${$('endTime').value}`,
+        intervalMinutes: number($('interval').value, 60),
+        target: $('target').value,
+        refraction: $('refraction').value,
+        maxRows: number($('maxRows').value, 50000)
+      };
+    }
+
+    function validateConfig(config){
+      const start = DateTime.fromISO(config.startLocal, {zone: config.timezone});
+      const end = DateTime.fromISO(config.endLocal, {zone: config.timezone});
+      if(!start.isValid) throw new Error('Startzeit ist ungueltig. Format: YYYY-MM-DD und HH:mm.');
+      if(!end.isValid) throw new Error('Endzeit ist ungueltig. Format: YYYY-MM-DD und HH:mm.');
+      if(end <= start) throw new Error('Ende muss nach Start liegen.');
+      if(config.latitudeDeg < -90 || config.latitudeDeg > 90) throw new Error('Breite muss zwischen -90 und 90 liegen.');
+      if(config.longitudeDeg < -180 || config.longitudeDeg > 180) throw new Error('Laenge muss zwischen -180 und 180 liegen.');
+      if(config.intervalMinutes < 1) throw new Error('Intervall muss mindestens 1 Minute sein.');
+      return {start, end};
+    }
+
+    function calcBody(body, objectName, dt, observer){
+      const jsDate = dt.toJSDate();
+      const equ = Equator(body, jsDate, observer, true, true);
+      const apparent = Horizon(jsDate, observer, equ.ra, equ.dec, 'normal');
+      const geometric = Horizon(jsDate, observer, equ.ra, equ.dec, null);
+      const illum = body === Body.Moon ? Illumination(Body.Moon, jsDate) : null;
+      return {
+        object: objectName,
+        azimuth_deg: round(apparent.azimuth, 6),
+        altitude_apparent_deg: round(apparent.altitude, 6),
+        altitude_geometric_deg: round(geometric.altitude, 6),
+        zenith_apparent_deg: round(90 - apparent.altitude, 6),
+        right_ascension_hours: round(equ.ra, 8),
+        declination_deg: round(equ.dec, 8),
+        distance_km: body === Body.Moon ? round(equ.dist * AU_KM, 3) : null,
+        illumination_percent: illum ? round(illum.phase_fraction * 100, 6) : null
+      };
+    }
+
+    function buildRows(config){
+      const {start, end} = validateConfig(config);
+      const observer = new Observer(config.latitudeDeg, config.longitudeDeg, config.elevationMeters);
+      const rows = [];
+      let dt = start;
+      let index = 1;
+      const useSun = config.target === 'both' || config.target === 'sun';
+      const useMoon = config.target === 'both' || config.target === 'moon';
+
+      while(dt <= end){
+        const utc = dt.toUTC();
+        if(useSun){
+          const p = calcBody(Body.Sun, 'Sonne', dt, observer);
+          rows.push(row(index++, config, dt, utc, p));
+        }
+        if(useMoon){
+          const p = calcBody(Body.Moon, 'Mond', dt, observer);
+          rows.push(row(index++, config, dt, utc, p));
+        }
+        if(rows.length > config.maxRows) throw new Error(`Zu viele Zeilen (${rows.length}). Zeitraum/Intervall verkleinern oder Max-Zeilen erhoehen.`);
+        dt = dt.plus({minutes: config.intervalMinutes});
+      }
+      return rows;
+    }
+
+    function row(index, config, dt, utc, p){
+      return {
+        index,
+        place: config.placeLabel,
+        latitude_deg: config.latitudeDeg,
+        longitude_deg: config.longitudeDeg,
+        elevation_m: config.elevationMeters,
+        timezone: config.timezone,
+        local_datetime: isoLocal(dt),
+        utc_datetime: utc.toISO({suppressMilliseconds:true}),
+        object: p.object,
+        azimuth_deg: p.azimuth_deg,
+        altitude_apparent_deg: p.altitude_apparent_deg,
+        altitude_geometric_deg: p.altitude_geometric_deg,
+        zenith_apparent_deg: p.zenith_apparent_deg,
+        right_ascension_hours: p.right_ascension_hours,
+        declination_deg: p.declination_deg,
+        moon_distance_km: p.distance_km,
+        moon_illumination_percent: p.illumination_percent,
+        algorithm: 'Astronomy Engine 2.1.19',
+        refraction_note: 'apparent altitude uses standard refraction; geometric altitude has no refraction'
+      };
+    }
+
+    function metadataRows(config, rows){
+      return [
+        {key:'generated_at_utc', value: new Date().toISOString()},
+        {key:'place', value: config.placeLabel},
+        {key:'latitude_deg', value: config.latitudeDeg},
+        {key:'longitude_deg', value: config.longitudeDeg},
+        {key:'elevation_m', value: config.elevationMeters},
+        {key:'timezone', value: config.timezone},
+        {key:'start_local', value: config.startLocal},
+        {key:'end_local', value: config.endLocal},
+        {key:'interval_minutes', value: config.intervalMinutes},
+        {key:'target', value: config.target},
+        {key:'row_count', value: rows.length},
+        {key:'algorithm', value:'Astronomy Engine 2.1.19'},
+        {key:'accuracy_notice', value:'Computed topocentric astronomical values. Not guaranteed to match real visual observation exactly because refraction, pressure, temperature, local horizon, weather, terrain/buildings, time-zone data, and model limits can shift observed values.'},
+        {key:'runtime_dependency', value:'Browser-only export; no server-side JPL Horizons lookup.'}
+      ];
+    }
+
+    function showMeta(config, rows){
+      $('meta').innerHTML = [
+        ['Zeilen', rows.length],
+        ['Zeitraum', `${config.startLocal} bis ${config.endLocal}`],
+        ['Intervall', `${config.intervalMinutes} min`],
+        ['Standort', `${config.placeLabel} (${config.latitudeDeg}, ${config.longitudeDeg})`]
+      ].map(([k,v]) => `<div class="pill"><b>${k}</b>${v}</div>`).join('');
+    }
+
+    function showPreview(rows){
+      const head = ['local_datetime','utc_datetime','object','azimuth_deg','altitude_apparent_deg','altitude_geometric_deg','zenith_apparent_deg','moon_illumination_percent','moon_distance_km'];
+      const body = rows.slice(0, 80).map(r => `<tr>${head.map(h => `<td>${r[h] ?? ''}</td>`).join('')}</tr>`).join('');
+      $('preview').innerHTML = `<table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    function calculatePreview(){
+      const config = getConfig();
+      const rows = buildRows(config);
+      showMeta(config, rows);
+      showPreview(rows);
+      $('status').textContent = `Vorschau berechnet. ${rows.length} Zeilen insgesamt. Angezeigt werden max. 80.`;
+      return {config, rows};
+    }
+
+    function exportExcel(){
+      $('status').textContent = 'Berechnung laeuft...';
+      setTimeout(() => {
+        try {
+          const config = getConfig();
+          const rows = buildRows(config);
+          showMeta(config, rows);
+          showPreview(rows);
+          const wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Results');
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(metadataRows(config, rows)), 'Metadata_Accuracy');
+          XLSX.writeFile(wb, excelFileName());
+          $('status').textContent = `Excel erzeugt: ${rows.length} Zeilen.`;
+        } catch(error) {
+          $('status').textContent = error.message || 'Export fehlgeschlagen.';
+        }
+      }, 20);
+    }
+
+    async function searchPlace(){
+      const q = $('query').value.trim();
+      if(q.length < 2){ $('geoStatus').textContent = 'Bitte Ort oder PLZ eingeben.'; return; }
+      $('geoStatus').textContent = 'Suche laeuft...';
+      try{
+        const params = new URLSearchParams({name:q,count:'1',language:'de',format:'json',countryCode:'DE'});
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
+        if(!res.ok) throw new Error('Ortssuche konnte nicht geladen werden.');
+        const data = await res.json();
+        const first = data.results && data.results[0];
+        if(!first) throw new Error('Kein Ort oder keine PLZ gefunden.');
+        const label = [first.postcodes && first.postcodes[0], first.name, first.admin1].filter(Boolean).join(' ');
+        $('placeLabel').value = label;
+        $('query').value = label;
+        $('lat').value = Number(first.latitude).toFixed(7);
+        $('lon').value = Number(first.longitude).toFixed(7);
+        $('elev').value = String(Math.round(first.elevation || 0));
+        if(first.timezone) $('tz').value = first.timezone;
+        $('geoStatus').textContent = 'Ort uebernommen.';
+      }catch(error){ $('geoStatus').textContent = error.message || 'Ortssuche fehlgeschlagen.'; }
+    }
+
+    $('searchBtn').addEventListener('click', searchPlace);
+    $('previewBtn').addEventListener('click', () => { try { calculatePreview(); } catch(error) { $('status').textContent = error.message; } });
+    $('exportBtn').addEventListener('click', exportExcel);
+    $('exportBtn2').addEventListener('click', exportExcel);
+    try { calculatePreview(); } catch(error) { $('status').textContent = error.message; }
+  </script>
+</body>
+</html>
