@@ -27,6 +27,7 @@
 - Fixed the calendar status model where quality could visually overwrite selection or total-inclusion state.
 - Fixed mobile layout overlap by keeping the calculate action in normal flow.
 - Kept `site/prototype-win98/index.html` and `site/sun-moon-export.html` during the Pages build.
+- Fixed the Windows-only `.gitignore` issue that kept `src/dso/export/` out of Git and broke the Linux GitHub Actions build.
 
 ## 2026-07-06
 
