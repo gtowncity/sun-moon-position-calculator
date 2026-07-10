@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:pages": "tsc -b && vite build --base=./ --outDir=site",
+    "build:pages": "tsc -b && vite build --base=./ --outDir=site --emptyOutDir=false",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "screenshot:design": "playwright test tests/e2e/design-screenshot.spec.ts",
+    "screenshot:design": "playwright test tests/e2e/design-screenshot.spec.ts tests/e2e/dso-session-ux.spec.ts",
+    "screenshot:dso": "playwright test tests/e2e/dso-session-ux.spec.ts",
     "audit:site": "playwright test tests/e2e/full-site-audit.spec.ts"
   },
   "dependencies": {

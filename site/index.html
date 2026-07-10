@@ -5,15 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sun Moon Position Calculator</title>
     <script>
-      if (location.hostname.endsWith("github.io") && !location.pathname.includes("/site/")) {
-        const path = location.pathname.endsWith("/") ? location.pathname : `${location.pathname}/`;
-        location.replace(`${path}site/`);
-      }
+      (function redirectGithubPagesRoot() {
+        if (location.hostname.endsWith("github.io") && !location.pathname.includes("/site/")) {
+          const path = location.pathname.endsWith("/") ? location.pathname : `${location.pathname}/`;
+          location.replace(`${path}site/`);
+        }
+        window.addEventListener("DOMContentLoaded", function updateFallbackLink() {
+          const link = document.getElementById("pages-fallback-link");
+          if (link && location.pathname.includes("/site/")) {
+            link.setAttribute("href", "./");
+          }
+        });
+      })();
     </script>
-    <script type="module" crossorigin src="./assets/index-BXW8a-G5.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DGlmHWe1.css">
+    <script type="module" crossorigin src="./assets/index-AK4swoPW.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DOxDFe57.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main style="font-family: system-ui, sans-serif; padding: 2rem; color: #e5eefb; background: #08111f; min-height: 100vh;">
+        <h1>Sun Moon Position Calculator</h1>
+        <p>Die App wird geladen. Falls nichts passiert, oeffne die GitHub-Pages-Version direkt:</p>
+        <p><a id="pages-fallback-link" style="color: #8bcfff;" href="./site/">App im site-Ordner oeffnen</a></p>
+      </main>
+    </div>
   </body>
 </html>

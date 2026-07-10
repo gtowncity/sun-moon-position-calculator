@@ -1,5 +1,33 @@
 # CHANGELOG.md
 
+## 2026-07-10
+
+### Added
+
+- Added a multi-object DSO Session Planner layer on top of the existing single-object DSO calculation pipeline.
+- Added session targets with per-object effective-hour goals, priority, active state and primary-target selection.
+- Added exposure allocation modes: equal distribution, manual per object and priority-based allocation.
+- Added complete local DSO location profiles with name, coordinates, elevation, IANA timezone, Bortle, SQM, default flag and explicit save/load/delete controls.
+- Added separated calendar state for quality, data category, selection and total inclusion.
+- Added calendar interaction: click for detail focus, checkbox-style total toggle, desktop context menu and mobile menu control.
+- Added an explanatory German quality-profile panel and contextual German warning box.
+- Added a clearer Belichtungsziel summary with total and per-object progress.
+- Added a simple FOV / Bildfeld preview for one or more session targets.
+- Added DSO session unit tests and Playwright DSO UX screenshots under `artifacts/dso-ux-screenshots/`.
+
+### Changed
+
+- Reworked the DSO planner UI from a single-object technical view into a broader session-planning surface.
+- Kept raw interval data collapsed by default under `Rechenweg / Rohdaten`.
+- Updated `build:pages` to preserve existing auxiliary pages while rebuilding `site/`.
+- Added a visible root fallback in `index.html` so GitHub Pages no longer appears as a blank white page if redirect or script loading is delayed.
+
+### Fixed
+
+- Fixed the calendar status model where quality could visually overwrite selection or total-inclusion state.
+- Fixed mobile layout overlap by keeping the calculate action in normal flow.
+- Kept `site/prototype-win98/index.html` and `site/sun-moon-export.html` during the Pages build.
+
 ## 2026-07-06
 
 ### Changed

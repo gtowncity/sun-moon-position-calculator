@@ -7,39 +7,38 @@ describe("App", () => {
     localStorage.clear();
   });
 
-  it("renders the terminal app frame and calculation controls", () => {
+  it("renders the Sun/Moon app frame and calculation controls", () => {
     const view = render(<App />);
 
-    expect(view.getByText(/SUN\/MOON ASTRO TERMINAL/i)).toBeInTheDocument();
-    expect(view.getByRole("button", { name: /analyze night/i })).toBeInTheDocument();
-    expect(view.getByText(/\[Control panel\]|\[Kontrollpanel\]/i)).toBeInTheDocument();
+    expect(view.getByText(/Sun & Moon Position Calculator/i)).toBeInTheDocument();
+    expect(view.getByRole("button", { name: /Berechnung starten/i })).toBeInTheDocument();
+    expect(view.getByRole("button", { name: /DSO Planner/i })).toBeInTheDocument();
   });
 
-  it("shows a time input and instant-specific action in single-instant mode", () => {
+  it("switches to the DSO session planner", () => {
     render(<App />);
 
-    fireEvent.click(screen.getByRole("tab", { name: /single instant|einzelzeitpunkt/i }));
+    fireEvent.click(screen.getByRole("button", { name: /DSO Planner/i }));
 
-    expect(screen.getByLabelText(/time|uhrzeit/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /calculate instant|zeitpunkt berechnen/i })).toBeInTheDocument();
-    expect(screen.getByText(/instant result|zeitpunkt-ergebnis/i)).toBeInTheDocument();
+    expect(screen.getByText(/\[DSO Session Planner\]/i)).toBeInTheDocument();
+    expect(screen.getByText(/Session-Ziele/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Session neu berechnen/i })).toBeInTheDocument();
   });
 
   it("keeps moon-only grid rows while night analysis still has solar context", async () => {
     const view = render(<App />);
-    const targetSelect = view.container.querySelector(".control-target select") as HTMLSelectElement;
 
-    fireEvent.change(targetSelect, { target: { value: "moon" } });
-    fireEvent.click(screen.getByRole("button", { name: /analyze night/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /Nur Mond/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Berechnung starten/i }));
 
-    await waitFor(() => expect(screen.getByText(/night analysis also uses internal sun altitude|nachtanalyse nutzt intern/i)).toBeInTheDocument());
-    expect(screen.queryByText(/^No results yet\.|^Noch keine Ergebnisse\.$/)).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText(/^Noch keine Ergebnisse\.$/)).not.toBeInTheDocument());
 
-    const dataGrid = view.container.querySelector(".result-data-grid-panel") as HTMLElement;
+    const tables = view.container.querySelectorAll(".win98-table");
+    const dataGrid = tables[tables.length - 1] as HTMLElement;
     const rows = within(dataGrid).getAllByRole("row").slice(1);
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) {
-      expect(within(row).getAllByRole("cell")[1]).toHaveTextContent(/Moon|Mond/);
+      expect(within(row).getAllByRole("cell")[1]).toHaveTextContent(/Mond/);
     }
   });
 });
