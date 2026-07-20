@@ -2,16 +2,327 @@ import { useMemo, useState } from "react";
 import { buildCalculationRequest, defaultCalculationFormState, type CalculationFormState, type CalculationRequest } from "../domain/calculationRequest";
 import { buildAstroSnapshot, formatDate, formatDeg, formatKm, formatPercent } from "../domain/astroCalculator";
 import { formatLocationLabel, searchLocation } from "../domain/geocoding";
+import { downloadBlob } from "../lib/export/download";
+import { exportRawSunMoonXlsx, rawSunMoonFilename } from "../lib/export/rawSunMoonXlsx";
 import "./Win98ShellPrototype.css";
 import "./Win98RequestDebug.css";
 
 const targetLabel = { both: "Sonne + Mond", sun: "Nur Sonne", moon: "Nur Mond" } as const;
 const modeLabel = { "one-night": "Eine Nacht", single: "Einzelzeitpunkt", range: "Zeitbereich", duration: "Start + Dauer" } as const;
-const twilightLabels = [["21:29","Sonnenuntergang"],["22:17","Bürgerliche Dämmerung Ende"],["23:13","Nautische Dämmerung Ende"],["--:--","Astronomische Nacht nicht erreicht"],["04:05","Bürgerliche Dämmerung Beginn"],["04:52","Sonnenaufgang"]];
-const eventRows = [["04:52","Sonne","Aufgang"],["06:27","Mond","Transit"],["13:11","Sonne","Transit"],["21:29","Sonne","Untergang"],["22:17","Sonne","Bürgerliche Dämmerung Ende"],["23:13","Sonne","Nautische Dämmerung Ende"]];
+const twilightLabels = [
+  ["21:29", "Sonnenuntergang"],
+  ["22:17", "Buergerliche Daemmerung Ende"],
+  ["23:13", "Nautische Daemmerung Ende"],
+  ["--:--", "Astronomische Nacht nicht erreicht"],
+  ["04:05", "Buergerliche Daemmerung Beginn"],
+  ["04:52", "Sonnenaufgang"]
+];
+const eventRows = [
+  ["04:52", "Sonne", "Aufgang"],
+  ["06:27", "Mond", "Transit"],
+  ["13:11", "Sonne", "Transit"],
+  ["21:29", "Sonne", "Untergang"],
+  ["22:17", "Sonne", "Buergerliche Daemmerung Ende"],
+  ["23:13", "Sonne", "Nautische Daemmerung Ende"]
+];
 
-function Menu({form}:{form:CalculationFormState}){return <><nav className="win98-menubar"><span><u>D</u>atei</span><span><u>B</u>erechnung</span><span><u>A</u>nsicht</span><span><u>W</u>erkzeuge</span><span><u>E</u>xport</span><span><u>H</u>ilfe</span></nav><div className="win98-toolbar"><button type="button">Neu</button><button type="button">Standort</button><button type="button">Jetzt</button><button type="button">Neu berechnen</button><i/><button type="button">Export</button><button type="button">Hilfe</button></div><div className="win98-addressbar"><span>Berechnung</span><div>{modeLabel[form.mode]} &gt; {form.locationLabel} &gt; {targetLabel[form.target]} &gt; {form.intervalMinutes} Minuten &gt; {formatDate(form.date)} {form.time} bis {formatDate(form.endDate)} {form.endTime}</div></div></>}
-function Controls({form,patch,onStart,onSearch,searchStatus}:{form:CalculationFormState;patch:(p:Partial<CalculationFormState>)=>void;onStart:()=>void;onSearch:()=>void;searchStatus:string}){return <section className="win98-control-strip"><fieldset className="win98-group"><legend>Standort</legend><div className="win98-field-grid win98-two-columns"><label>Ort / PLZ<input value={form.locationQuery} onChange={e=>patch({locationQuery:e.currentTarget.value})}/></label><label>Quelle<select value={form.observerSource} onChange={e=>patch({observerSource:e.currentTarget.value as CalculationFormState["observerSource"]})}><option value="manual">Manuell</option><option value="browser">Browser</option><option value="geocoding">Ortssuche</option><option value="postal">PLZ</option></select></label><label>Breite<input value={form.latitudeDeg} onChange={e=>patch({latitudeDeg:e.currentTarget.value,observerSource:"manual"})}/></label><label>Länge<input value={form.longitudeDeg} onChange={e=>patch({longitudeDeg:e.currentTarget.value,observerSource:"manual"})}/></label><label>Höhe<input value={form.elevationMeters} onChange={e=>patch({elevationMeters:e.currentTarget.value,observerSource:"manual"})}/></label><label>Name<input value={form.locationLabel} onChange={e=>patch({locationLabel:e.currentTarget.value})}/></label></div><div className="win98-button-row"><button type="button" onClick={onSearch}>Ort/PLZ suchen</button><button type="button">GPS</button></div><p className="win98-location-status">{searchStatus || "Ortssuche nutzt Open-Meteo Geocoding."}</p></fieldset><fieldset className="win98-group"><legend>Zeit</legend><div className="win98-field-grid"><label>Datum<input value={form.date} onChange={e=>patch({date:e.currentTarget.value})}/></label><label>Uhrzeit<input value={form.time} onChange={e=>patch({time:e.currentTarget.value})}/></label><label>Zeitzone<select value={form.timezoneIana} onChange={e=>patch({timezoneIana:e.currentTarget.value})}><option>Europe/Berlin</option><option>UTC</option></select></label></div></fieldset><fieldset className="win98-group win98-target-group"><legend>Ziel</legend><div className="win98-radio-list"><label><input type="radio" checked={form.target==="both"} onChange={()=>patch({target:"both"})}/>Sonne + Mond</label><label><input type="radio" checked={form.target==="sun"} onChange={()=>patch({target:"sun"})}/>Nur Sonne</label><label><input type="radio" checked={form.target==="moon"} onChange={()=>patch({target:"moon"})}/>Nur Mond</label></div><select value={form.mode} onChange={e=>patch({mode:e.currentTarget.value as CalculationFormState["mode"]})}><option value="one-night">Eine Nacht</option><option value="single">Einzelzeitpunkt</option><option value="range">Zeitbereich</option><option value="duration">Start + Dauer</option></select></fieldset><fieldset className="win98-group win98-interval-group"><legend>Intervall</legend><label>Ende Datum<input value={form.endDate} onChange={e=>patch({endDate:e.currentTarget.value})}/></label><label>Ende Zeit<input value={form.endTime} onChange={e=>patch({endTime:e.currentTarget.value})}/></label><label>Schritt<select value={form.intervalMinutes} onChange={e=>patch({intervalMinutes:e.currentTarget.value})}><option value="1">1 Minute</option><option value="5">5 Minuten</option><option value="10">10 Minuten</option><option value="30">30 Minuten</option><option value="60">60 Minuten</option></select></label><p>Zeilen: Vorschau 5 / Tabelle später</p></fieldset><aside className="win98-action-panel"><div><b>Aktion</b><br/><button type="button" className="win98-default-button" onClick={onStart}>Berechnung starten</button></div><div className="win98-options-strip"><b>Optionen:</b><br/>Refraktion Standard<br/>Dezimalgrad | Deutsch<br/><button type="button">Erweitert...</button></div></aside></section>}
-function Summary({snapshot,form}:{snapshot:ReturnType<typeof buildAstroSnapshot>;form:CalculationFormState}){return <section className="win98-summary-zone"><article className="win98-panel win98-summary-card"><header><b>Sonne</b></header><div className="win98-metric-label">Höhe zur Startzeit</div><div className="win98-metric-note">{formatDate(form.date)} {form.time}</div><div className="win98-readout">{formatDeg(snapshot.sun.altitudeDegApparent)}</div><dl><div><dt>Azimut</dt><dd>{formatDeg(snapshot.sun.azimuthDeg)}</dd></div><div><dt>Zenit</dt><dd>{formatDeg(snapshot.sun.zenithDegApparent)}</dd></div><div><dt>geometrisch</dt><dd>{formatDeg(snapshot.sun.altitudeDegGeometric)}</dd></div><div><dt>Bezug</dt><dd>Startzeit</dd></div></dl></article><article className="win98-panel win98-summary-card"><header><b>Mond</b></header><div className="win98-metric-label">Höhe zur Startzeit</div><div className="win98-metric-note">{formatDate(form.date)} {form.time}</div><div className="win98-readout">{formatDeg(snapshot.moon.altitudeDegApparent)}</div><span className="win98-substatus">{snapshot.moon.altitudeDegApparent >= 0 ? "über Horizont" : "unter Horizont"}</span><dl><div><dt>Azimut</dt><dd>{formatDeg(snapshot.moon.azimuthDeg)}</dd></div><div><dt>Phase</dt><dd>{formatPercent(snapshot.moon.illuminationPercent ?? 0)}</dd></div><div><dt>geometrisch</dt><dd>{formatDeg(snapshot.moon.altitudeDegGeometric)}</dd></div><div><dt>Distanz</dt><dd>{formatKm(snapshot.moon.distanceKm ?? 0)}</dd></div></dl></article><aside className="win98-panel win98-warning-panel"><span className="win98-warning-icon">!</span><div><h3>Hinweis</h3><p>Höhe = Altitude über dem Horizont zur eingegebenen Startzeit.</p><button type="button">Details...</button></div></aside></section>}
-function Work({request,form,snapshot}:{request:CalculationRequest|null;form:CalculationFormState;snapshot:ReturnType<typeof buildAstroSnapshot>}){return <section className="win98-tabs-area"><div className="win98-tabs"><button className="active">Übersicht</button><button>Sonne</button><button>Mond</button><button>Ereignisse</button><button>Tabelle</button><button>Export</button><button>Genauigkeit</button></div><div className="win98-tab-page"><div className="win98-tab-layout"><section className="win98-panel"><header><b>Nachtübersicht</b></header><div className="win98-night-banner"><span>{formatDate(form.date)} -&gt; {formatDate(form.endDate)}</span><b>{form.locationLabel}</b></div><div className="win98-twilight-list">{twilightLabels.map(([a,b])=><div key={a+b}><span>{a}</span><span>{b}</span></div>)}</div></section><section className="win98-panel"><header><b>Ereignisse</b></header><div className="win98-table-wrap"><table className="win98-table"><thead><tr><th>Zeit</th><th>Objekt</th><th>Ereignis</th></tr></thead><tbody>{eventRows.map(([a,b,c])=><tr key={a+b+c}><td>{a}</td><td>{b}</td><td>{c}</td></tr>)}</tbody></table></div></section></div><section className="win98-panel win98-preview-panel"><header><b>Ergebnisvorschau - erste 5 Zeilen</b><span>berechnet aus Eingabezeit und Intervall</span></header><div className="win98-table-wrap"><table className="win98-table"><thead><tr><th>#</th><th>Objekt</th><th>Zeit</th><th>Azimut</th><th>Höhe</th><th>Zenit</th><th>Phase</th></tr></thead><tbody>{snapshot.previewRows.map((r,i)=><tr key={`${r.object}-${r.timeLabel}-${i}`}><td>{i+1}</td><td>{r.object}</td><td>{r.timeLabel}</td><td>{formatDeg(r.azimuthDeg)}</td><td>{formatDeg(r.altitudeDegApparent)}</td><td>{formatDeg(r.zenithDegApparent)}</td><td>{r.illuminationPercent===undefined?"--":formatPercent(r.illuminationPercent)}</td></tr>)}</tbody></table></div></section>{request&&<section className="win98-panel win98-request-panel"><header><b>CalculationRequest</b><span>nur Datenmodell / Astro-Werte oben aus Astronomy Engine</span></header><pre>{JSON.stringify(request,null,2)}</pre></section>}</div></section>}
-export function Win98ShellPrototype(){const [form,setForm]=useState<CalculationFormState>(defaultCalculationFormState);const [request,setRequest]=useState<CalculationRequest|null>(null);const [searchStatus,setSearchStatus]=useState("");const patch=(p:Partial<CalculationFormState>)=>setForm(f=>({...f,...p}));const snapshot=useMemo(()=>buildAstroSnapshot(form),[form]);const handleSearch=async()=>{setSearchStatus("Suche läuft...");try{const result=await searchLocation(form.locationQuery);patch({latitudeDeg:String(result.latitude.toFixed(7)),longitudeDeg:String(result.longitude.toFixed(7)),elevationMeters:String(Math.round(result.elevation??0)),timezoneIana:result.timezone||form.timezoneIana,observerSource:"geocoding",locationLabel:formatLocationLabel(result),locationQuery:formatLocationLabel(result)});setSearchStatus("Ort übernommen.");}catch(error){setSearchStatus(error instanceof Error?error.message:"Ortssuche fehlgeschlagen.");}};return <div className="win98-desktop"><section className="win98-app-window"><header className="win98-titlebar"><div className="win98-titlebar-left"><span className="win98-app-icon"/><strong>Sun &amp; Moon Position Calculator</strong></div><div className="win98-window-controls"><button>_</button><button>□</button><button>X</button></div></header><Menu form={form}/><main className="win98-content"><Controls form={form} patch={patch} onStart={()=>setRequest(buildCalculationRequest(form))} onSearch={handleSearch} searchStatus={searchStatus}/><Summary snapshot={snapshot} form={form}/><Work request={request} form={form} snapshot={snapshot}/></main><footer className="win98-statusbar"><span>{request?"Request erzeugt":"Bereit"}</span><span>Standort: {form.locationLabel}</span><span>Zeitzone: {form.timezoneIana}</span><span>Intervall: {form.intervalMinutes} min</span><span>Refraktion: Standard</span><span>Engine: Astronomy</span></footer></section></div>}
+function Menu({ form, onRawExport }: { form: CalculationFormState; onRawExport: () => void }) {
+  return (
+    <>
+      <nav className="win98-menubar">
+        <span><u>D</u>atei</span>
+        <span><u>B</u>erechnung</span>
+        <span><u>A</u>nsicht</span>
+        <span><u>W</u>erkzeuge</span>
+        <span><u>E</u>xport</span>
+        <span><u>H</u>ilfe</span>
+      </nav>
+      <div className="win98-toolbar">
+        <button type="button">Neu</button>
+        <button type="button">Standort</button>
+        <button type="button">Jetzt</button>
+        <button type="button">Neu berechnen</button>
+        <i />
+        <button type="button" onClick={onRawExport}>Rohdaten XLSX</button>
+        <button type="button">Hilfe</button>
+      </div>
+      <div className="win98-addressbar">
+        <span>Berechnung</span>
+        <div>
+          {modeLabel[form.mode]} &gt; {form.locationLabel} &gt; {targetLabel[form.target]} &gt; Rohdaten 1 Minute &gt;{" "}
+          {formatDate(form.date)} {form.time} bis {formatDate(form.endDate)} {form.endTime}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function Controls({
+  form,
+  patch,
+  onStart,
+  onSearch,
+  onRawExport,
+  searchStatus
+}: {
+  form: CalculationFormState;
+  patch: (p: Partial<CalculationFormState>) => void;
+  onStart: () => void;
+  onSearch: () => void;
+  onRawExport: () => void;
+  searchStatus: string;
+}) {
+  return (
+    <section className="win98-control-strip">
+      <fieldset className="win98-group">
+        <legend>Standort</legend>
+        <div className="win98-field-grid win98-two-columns">
+          <label>Ort / PLZ<input value={form.locationQuery} onChange={(e) => patch({ locationQuery: e.currentTarget.value })} /></label>
+          <label>Quelle
+            <select value={form.observerSource} onChange={(e) => patch({ observerSource: e.currentTarget.value as CalculationFormState["observerSource"] })}>
+              <option value="manual">Manuell</option>
+              <option value="browser">Browser</option>
+              <option value="geocoding">Ortssuche</option>
+              <option value="postal">PLZ</option>
+            </select>
+          </label>
+          <label>Breite<input value={form.latitudeDeg} onChange={(e) => patch({ latitudeDeg: e.currentTarget.value, observerSource: "manual" })} /></label>
+          <label>Laenge<input value={form.longitudeDeg} onChange={(e) => patch({ longitudeDeg: e.currentTarget.value, observerSource: "manual" })} /></label>
+          <label>Hoehe<input value={form.elevationMeters} onChange={(e) => patch({ elevationMeters: e.currentTarget.value, observerSource: "manual" })} /></label>
+          <label>Name<input value={form.locationLabel} onChange={(e) => patch({ locationLabel: e.currentTarget.value })} /></label>
+        </div>
+        <div className="win98-button-row">
+          <button type="button" onClick={onSearch}>Ort/PLZ suchen</button>
+          <button type="button">GPS</button>
+        </div>
+        <p className="win98-location-status">{searchStatus || "Ortssuche nutzt Open-Meteo Geocoding."}</p>
+      </fieldset>
+
+      <fieldset className="win98-group">
+        <legend>Zeit</legend>
+        <div className="win98-field-grid">
+          <label>Datum<input value={form.date} onChange={(e) => patch({ date: e.currentTarget.value })} /></label>
+          <label>Uhrzeit<input value={form.time} onChange={(e) => patch({ time: e.currentTarget.value })} /></label>
+          <label>Zeitzone
+            <select value={form.timezoneIana} onChange={(e) => patch({ timezoneIana: e.currentTarget.value })}>
+              <option>Europe/Berlin</option>
+              <option>UTC</option>
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset className="win98-group win98-target-group">
+        <legend>Ziel</legend>
+        <div className="win98-radio-list">
+          <label><input type="radio" checked={form.target === "both"} onChange={() => patch({ target: "both" })} />Sonne + Mond</label>
+          <label><input type="radio" checked={form.target === "sun"} onChange={() => patch({ target: "sun" })} />Nur Sonne</label>
+          <label><input type="radio" checked={form.target === "moon"} onChange={() => patch({ target: "moon" })} />Nur Mond</label>
+        </div>
+        <select value={form.mode} onChange={(e) => patch({ mode: e.currentTarget.value as CalculationFormState["mode"] })}>
+          <option value="one-night">Eine Nacht</option>
+          <option value="single">Einzelzeitpunkt</option>
+          <option value="range">Zeitbereich</option>
+          <option value="duration">Start + Dauer</option>
+        </select>
+      </fieldset>
+
+      <fieldset className="win98-group win98-interval-group">
+        <legend>Intervall</legend>
+        <label>Ende Datum<input value={form.endDate} onChange={(e) => patch({ endDate: e.currentTarget.value })} /></label>
+        <label>Ende Zeit<input value={form.endTime} onChange={(e) => patch({ endTime: e.currentTarget.value })} /></label>
+        <label>Schritt
+          <select value={form.intervalMinutes} onChange={(e) => patch({ intervalMinutes: e.currentTarget.value })}>
+            <option value="1">1 Minute</option>
+            <option value="5">5 Minuten</option>
+            <option value="10">10 Minuten</option>
+            <option value="30">30 Minuten</option>
+            <option value="60">60 Minuten</option>
+          </select>
+        </label>
+        <p>Rohdaten-Export: immer Sonne + Mond, 1 Minute.</p>
+      </fieldset>
+
+      <aside className="win98-action-panel">
+        <div>
+          <b>Aktion</b><br />
+          <button type="button" className="win98-default-button" onClick={onStart}>Berechnung starten</button>
+          <button type="button" onClick={onRawExport}>Rohdaten Excel (1 min)</button>
+        </div>
+        <div className="win98-options-strip">
+          <b>Optionen:</b><br />Refraktion Standard<br />Dezimalgrad | Deutsch<br />
+          <button type="button">Erweitert...</button>
+        </div>
+      </aside>
+    </section>
+  );
+}
+
+function Summary({ snapshot, form }: { snapshot: ReturnType<typeof buildAstroSnapshot>; form: CalculationFormState }) {
+  return (
+    <section className="win98-summary-zone">
+      <article className="win98-panel win98-summary-card">
+        <header><b>Sonne</b></header>
+        <div className="win98-metric-label">Hoehe zur Startzeit</div>
+        <div className="win98-metric-note">{formatDate(form.date)} {form.time}</div>
+        <div className="win98-readout">{formatDeg(snapshot.sun.altitudeDegApparent)}</div>
+        <dl>
+          <div><dt>Azimut</dt><dd>{formatDeg(snapshot.sun.azimuthDeg)}</dd></div>
+          <div><dt>Zenit</dt><dd>{formatDeg(snapshot.sun.zenithDegApparent)}</dd></div>
+          <div><dt>geometrisch</dt><dd>{formatDeg(snapshot.sun.altitudeDegGeometric)}</dd></div>
+          <div><dt>Bezug</dt><dd>Startzeit</dd></div>
+        </dl>
+      </article>
+      <article className="win98-panel win98-summary-card">
+        <header><b>Mond</b></header>
+        <div className="win98-metric-label">Hoehe zur Startzeit</div>
+        <div className="win98-metric-note">{formatDate(form.date)} {form.time}</div>
+        <div className="win98-readout">{formatDeg(snapshot.moon.altitudeDegApparent)}</div>
+        <span className="win98-substatus">{snapshot.moon.altitudeDegApparent >= 0 ? "ueber Horizont" : "unter Horizont"}</span>
+        <dl>
+          <div><dt>Azimut</dt><dd>{formatDeg(snapshot.moon.azimuthDeg)}</dd></div>
+          <div><dt>Phase</dt><dd>{formatPercent(snapshot.moon.illuminationPercent ?? 0)}</dd></div>
+          <div><dt>geometrisch</dt><dd>{formatDeg(snapshot.moon.altitudeDegGeometric)}</dd></div>
+          <div><dt>Distanz</dt><dd>{formatKm(snapshot.moon.distanceKm ?? 0)}</dd></div>
+        </dl>
+      </article>
+      <aside className="win98-panel win98-warning-panel">
+        <span className="win98-warning-icon">!</span>
+        <div>
+          <h3>Hinweis</h3>
+          <p>Hoehe = Altitude ueber dem Horizont zur eingegebenen Startzeit.</p>
+          <button type="button">Details...</button>
+        </div>
+      </aside>
+    </section>
+  );
+}
+
+function Work({ request, form, snapshot }: { request: CalculationRequest | null; form: CalculationFormState; snapshot: ReturnType<typeof buildAstroSnapshot> }) {
+  return (
+    <section className="win98-tabs-area">
+      <div className="win98-tabs">
+        <button className="active">Uebersicht</button>
+        <button>Sonne</button>
+        <button>Mond</button>
+        <button>Ereignisse</button>
+        <button>Tabelle</button>
+        <button>Export</button>
+        <button>Genauigkeit</button>
+      </div>
+      <div className="win98-tab-page">
+        <div className="win98-tab-layout">
+          <section className="win98-panel">
+            <header><b>Nachtuebersicht</b></header>
+            <div className="win98-night-banner"><span>{formatDate(form.date)} -&gt; {formatDate(form.endDate)}</span><b>{form.locationLabel}</b></div>
+            <div className="win98-twilight-list">{twilightLabels.map(([a, b]) => <div key={a + b}><span>{a}</span><span>{b}</span></div>)}</div>
+          </section>
+          <section className="win98-panel">
+            <header><b>Ereignisse</b></header>
+            <div className="win98-table-wrap">
+              <table className="win98-table">
+                <thead><tr><th>Zeit</th><th>Objekt</th><th>Ereignis</th></tr></thead>
+                <tbody>{eventRows.map(([a, b, c]) => <tr key={a + b + c}><td>{a}</td><td>{b}</td><td>{c}</td></tr>)}</tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+        <section className="win98-panel win98-preview-panel">
+          <header><b>Ergebnisvorschau - erste 5 Zeilen</b><span>berechnet aus Eingabezeit und Intervall</span></header>
+          <div className="win98-table-wrap">
+            <table className="win98-table">
+              <thead><tr><th>#</th><th>Objekt</th><th>Zeit</th><th>Azimut</th><th>Hoehe</th><th>Zenit</th><th>Phase</th></tr></thead>
+              <tbody>
+                {snapshot.previewRows.map((row, index) => (
+                  <tr key={`${row.object}-${row.timeLabel}-${index}`}>
+                    <td>{index + 1}</td>
+                    <td>{row.object}</td>
+                    <td>{row.timeLabel}</td>
+                    <td>{formatDeg(row.azimuthDeg)}</td>
+                    <td>{formatDeg(row.altitudeDegApparent)}</td>
+                    <td>{formatDeg(row.zenithDegApparent)}</td>
+                    <td>{row.illuminationPercent === undefined ? "--" : formatPercent(row.illuminationPercent)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        {request && (
+          <section className="win98-panel win98-request-panel">
+            <header><b>CalculationRequest</b><span>nur Datenmodell / Astro-Werte oben aus Astronomy Engine</span></header>
+            <pre>{JSON.stringify(request, null, 2)}</pre>
+          </section>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function Win98ShellPrototype() {
+  const [form, setForm] = useState<CalculationFormState>(defaultCalculationFormState);
+  const [request, setRequest] = useState<CalculationRequest | null>(null);
+  const [searchStatus, setSearchStatus] = useState("");
+  const patch = (p: Partial<CalculationFormState>) => setForm((current) => ({ ...current, ...p }));
+  const snapshot = useMemo(() => buildAstroSnapshot(form), [form]);
+
+  const handleRawExport = async () => {
+    try {
+      const buffer = await exportRawSunMoonXlsx(form);
+      downloadBlob(rawSunMoonFilename(form), new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Rohdaten-Export fehlgeschlagen.");
+    }
+  };
+
+  const handleSearch = async () => {
+    setSearchStatus("Suche laeuft...");
+    try {
+      const result = await searchLocation(form.locationQuery);
+      patch({
+        latitudeDeg: String(result.latitude.toFixed(7)),
+        longitudeDeg: String(result.longitude.toFixed(7)),
+        elevationMeters: String(Math.round(result.elevation ?? 0)),
+        timezoneIana: result.timezone || form.timezoneIana,
+        observerSource: "geocoding",
+        locationLabel: formatLocationLabel(result),
+        locationQuery: formatLocationLabel(result)
+      });
+      setSearchStatus("Ort uebernommen.");
+    } catch (error) {
+      setSearchStatus(error instanceof Error ? error.message : "Ortssuche fehlgeschlagen.");
+    }
+  };
+
+  return (
+    <div className="win98-desktop">
+      <section className="win98-app-window">
+        <header className="win98-titlebar">
+          <div className="win98-titlebar-left"><span className="win98-app-icon" /><strong>Sun &amp; Moon Position Calculator</strong></div>
+          <div className="win98-window-controls"><button>_</button><button>[]</button><button>X</button></div>
+        </header>
+        <Menu form={form} onRawExport={handleRawExport} />
+        <main className="win98-content">
+          <Controls
+            form={form}
+            patch={patch}
+            onStart={() => setRequest(buildCalculationRequest(form))}
+            onSearch={handleSearch}
+            onRawExport={handleRawExport}
+            searchStatus={searchStatus}
+          />
+          <Summary snapshot={snapshot} form={form} />
+          <Work request={request} form={form} snapshot={snapshot} />
+        </main>
+        <footer className="win98-statusbar">
+          <span>{request ? "Request erzeugt" : "Bereit"}</span>
+          <span>Standort: {form.locationLabel}</span>
+          <span>Zeitzone: {form.timezoneIana}</span>
+          <span>Rohdaten: 1 min</span>
+          <span>Refraktion: Standard</span>
+          <span>Engine: Astronomy</span>
+        </footer>
+      </section>
+    </div>
+  );
+}

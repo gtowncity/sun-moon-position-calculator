@@ -22,6 +22,15 @@ export interface AstroSnapshot {
   previewRows: AstroPosition[];
 }
 
+export interface RawSunMoonRow extends AstroPosition {
+  index: number;
+  localDateTime: string;
+  latitudeDeg: number;
+  longitudeDeg: number;
+  elevationMeters: number;
+  locationLabel: string;
+}
+
 const toNumber = (value: string, fallback = 0) => {
   const parsed = Number(value.replace(",", "."));
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -37,6 +46,11 @@ export const formatDate = (dateText: string) => {
   const [year, month, day] = dateText.split("-");
   return year && month && day ? `${day}.${month}.${year}` : dateText;
 };
+
+const pad2 = (value: number) => String(value).padStart(2, "0");
+const formatLocalDateTime = (date: Date) => (
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())} ${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+);
 
 function calculateBody(body: Body, object: "Sonne" | "Mond", date: Date, observer: Observer): AstroPosition {
   const equ = Equator(body, date, observer, true, true);
@@ -54,6 +68,50 @@ function calculateBody(body: Body, object: "Sonne" | "Mond", date: Date, observe
     distanceKm: object === "Mond" ? equ.dist * KM_PER_AU : undefined,
     illuminationPercent: illum ? illum.phase_fraction * 100 : undefined
   };
+}
+
+export function buildRawSunMoonRows(form: CalculationFormState): RawSunMoonRow[] {
+  const latitudeDeg = toNumber(form.latitudeDeg);
+  const longitudeDeg = toNumber(form.longitudeDeg);
+  const elevationMeters = toNumber(form.elevationMeters);
+  const observer = new Observer(latitudeDeg, longitudeDeg, elevationMeters);
+  const startDate = localDate(form.date, form.time);
+  const endDate = localDate(form.endDate, form.endTime);
+
+  if (endDate < startDate) {
+    throw new Error("Ende muss nach Start liegen.");
+  }
+
+  const rows: RawSunMoonRow[] = [];
+  let current = new Date(startDate);
+  let index = 1;
+
+  while (current <= endDate) {
+    const localDateTime = formatLocalDateTime(current);
+    rows.push({
+      ...calculateBody(Body.Sun, "Sonne", current, observer),
+      index,
+      localDateTime,
+      latitudeDeg,
+      longitudeDeg,
+      elevationMeters,
+      locationLabel: form.locationLabel
+    });
+    index += 1;
+    rows.push({
+      ...calculateBody(Body.Moon, "Mond", current, observer),
+      index,
+      localDateTime,
+      latitudeDeg,
+      longitudeDeg,
+      elevationMeters,
+      locationLabel: form.locationLabel
+    });
+    index += 1;
+    current = new Date(current.getTime() + 60_000);
+  }
+
+  return rows;
 }
 
 export function buildAstroSnapshot(form: CalculationFormState): AstroSnapshot {
